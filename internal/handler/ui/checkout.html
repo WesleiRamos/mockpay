@@ -1,0 +1,584 @@
+{{define "checkout.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{t "checkout.page_title"}}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Righteous&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --near-black:  #0e0f0c;
+            --mockpay-green:  #9fe870;
+            --dark-green:  #163300;
+            --light-mint:  #e2f6d5;
+            --gray:        #868685;
+            --warm-dark:   #454745;
+            --bg:          #f7f8f5;
+            --white:       #ffffff;
+            --ring:        rgba(14,15,12,0.12);
+            --pos-green:   #054d28;
+            --danger-red:  #d03238;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-feature-settings: "calt" 1; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--near-black);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            -webkit-font-smoothing: antialiased;
+            font-weight: 600;
+        }
+
+        .font-logo {
+            font-family: 'Righteous', cursive;
+            text-transform: lowercase;
+            letter-spacing: -0.05em;
+            font-size: 1.5rem;
+            text-decoration: none;
+            color: var(--near-black);
+        }
+
+        /* ── SHELL ───────────────────────────────── */
+        .shell {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 24px 80px;
+            gap: 0;
+        }
+
+        /* ── TWO-COLUMN CARD ──────────────────────── */
+        .checkout-card {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            background: var(--white);
+            border-radius: 30px;
+            overflow: hidden;
+            width: 100%;
+            min-height: 630px;
+            max-width: 860px;
+            animation: fade-up .4s ease both;
+        }
+
+        /* ── LEFT PANEL ───────────────────────────── */
+        .left {
+            background: var(--light-mint);
+            padding: 40px 36px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+            position: relative;
+            overflow: hidden;
+        }
+        .left::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: radial-gradient(ellipse at 0% 0%, rgba(159,232,112,.25) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .left-logo {
+            font-size: 28px; font-weight: 900;
+            letter-spacing: -0.05em;
+            display: flex; align-items: center; gap: 9px;
+            color: var(--near-black);
+            margin-bottom: 44px;
+        }
+        .left-logo .logo-dot {
+            width: 11px; height: 11px;
+            border-radius: 50%;
+            background: var(--dark-green);
+        }
+
+        .left-label {
+            font-size: 11px; font-weight: 700;
+            letter-spacing: .1em; text-transform: uppercase;
+            color: rgba(14,15,12,.4);
+            margin-bottom: 8px;
+        }
+
+        .left-amount {
+            font-size: clamp(44px, 5vw, 60px);
+            font-weight: 900;
+            line-height: .88;
+            letter-spacing: -0.04em;
+            color: var(--near-black);
+            margin-bottom: 32px;
+        }
+        .left-original {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--gray);
+            text-decoration: line-through;
+            margin-bottom: 5px;
+        }
+        .discount-badge {
+            background: rgba(14,15,12,.05);
+            border-radius: 12px; padding: 4px 10px;
+            font-size: 12px; font-weight: 700;
+            color: var(--dark-green);
+            letter-spacing: 0.03em;
+        }
+
+        .left-divider {
+            height: 1px;
+            background: rgba(14,15,12,.1);
+            margin-bottom: 24px;
+        }
+
+        .meta-row {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(14,15,12,.07);
+        }
+        .meta-row:last-of-type { border-bottom: none; }
+        .meta-key {
+            font-size: 11px; font-weight: 700;
+            letter-spacing: .08em; text-transform: uppercase;
+            color: rgba(14,15,12,.35);
+        }
+        .meta-val {
+            font-size: 13px; font-weight: 600;
+            color: var(--near-black);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .status-pill {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 10px; border-radius: 9999px;
+            font-size: 10px; font-weight: 700;
+            letter-spacing: .07em; text-transform: uppercase;
+        }
+        .status-pill::before {
+            content: ''; width: 4px; height: 4px;
+            border-radius: 50%; background: currentColor; opacity: .8;
+        }
+        .s-pending  { background: rgba(255,209,26,.25);  color: #7a5500; }
+        .s-approved { background: rgba(5,77,40,.12);     color: var(--pos-green); }
+        .s-denied   { background: rgba(208,50,56,.12);   color: var(--danger-red); }
+        .s-expired  { background: rgba(14,15,12,.08);    color: var(--warm-dark); }
+
+        /* products in left */
+        .products { margin-top: 24px; }
+        .products-label {
+            font-size: 11px; font-weight: 700;
+            letter-spacing: .1em; text-transform: uppercase;
+            color: rgba(14,15,12,.35); margin-bottom: 10px;
+        }
+        .product-item {
+            background: rgba(14,15,12,.05);
+            border-radius: 12px; padding: 12px 14px; margin-bottom: 6px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
+        .product-name { font-size: 13px; font-weight: 700; color: var(--near-black); }
+        .product-detail { font-size: 12px; color: var(--warm-dark); font-weight: 500; }
+
+        .left-footer {
+            margin-top: auto; padding-top: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        /* ── RIGHT PANEL ──────────────────────────── */
+        .right {
+            padding: 40px 36px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .right-title {
+            font-size: 20px; font-weight: 900;
+            letter-spacing: -0.03em; line-height: .9;
+            margin-bottom: 28px;
+        }
+
+        /* ── METHOD TABS ──────────────────────────── */
+        .method-tabs {
+            display: flex; gap: 4px; padding: 4px;
+            background: var(--bg); border-radius: 14px;
+            margin-bottom: 24px;
+        }
+        .method-tab {
+            flex: 1; padding: 9px; border: none; border-radius: 10px;
+            font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 700;
+            cursor: pointer; background: transparent; color: var(--gray);
+            transition: all .15s;
+        }
+        .method-tab.active {
+            background: var(--white); color: var(--near-black);
+        }
+
+        .method-panel { display: none; }
+        .method-panel.active { display: block; }
+
+        /* ── QR ───────────────────────────────────── */
+        .qr-wrap {
+            display: flex; flex-direction: column; align-items: center;
+            padding: 24px 0 16px;
+        }
+        .qr-hint {
+            font-size: 11px; font-weight: 700;
+            letter-spacing: .08em; text-transform: uppercase;
+            color: var(--gray); margin-bottom: 16px;
+        }
+        .qr-img {
+            width: 160px; height: 160px; border-radius: 16px;
+            box-shadow: var(--ring) 0 0 0 1px; padding: 8px;
+            background: var(--white);
+        }
+
+        /* ── FORM ─────────────────────────────────── */
+        .form-group { margin-bottom: 20px; }
+        .form-label {
+            display: block; font-size: 10px; font-weight: 700;
+            letter-spacing: .09em; text-transform: uppercase;
+            color: var(--gray); margin-bottom: 5px;
+        }
+        .form-input {
+            margin-top: 5px;
+            width: 100%; padding: 11px 13px; border-radius: 12px;
+            border:none; background: var(--bg);
+            font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+            color: var(--near-black); outline: none;
+            transition: border-color .15s;
+        }
+        .form-input:focus { border-color: none; background: var(--white); }
+        .form-input::placeholder { color: var(--gray); font-weight: 500; }
+        .form-row { display: flex; gap: 8px; }
+        .form-row .form-group { flex: 1; }
+
+        .form-select {
+            width: 100%; padding: 11px 13px; border-radius: 12px;
+            border: none; background: var(--bg);
+            font-family: 'Inter', sans-serif; font-size: 14px; font-weight: 600;
+            color: var(--near-black); outline: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23868685' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 13px center;
+            cursor: pointer;
+            transition: border-color .15s;
+        }
+        .form-select:focus { border-color: var(--near-black); }
+
+        .installment-info {
+            background: var(--bg); border-radius: 10px;
+            padding: 10px 14px; margin-top: 8px;
+            font-size: 12px; color: var(--warm-dark); font-weight: 500;
+        }
+
+        /* ── EXPIRES ──────────────────────────────── */
+        .expires-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 10px 0;
+            font-size: 12px; color: var(--gray);
+            border-top: 1px solid rgba(14,15,12,.06);
+            margin-top: 16px;
+        }
+        .expires-key { font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+        .expires-val { font-weight: 600; color: var(--near-black); }
+
+        /* ── ACTIONS ──────────────────────────────── */
+        .actions { margin-top: auto; padding-top: 24px; display: flex; flex-direction: column; gap: 8px; }
+        .btn {
+            width: 100%; padding: 13px; border: none; border-radius: 9999px;
+            font-size: 15px; font-weight: 700; font-family: 'Inter', sans-serif;
+            letter-spacing: -0.02em; cursor: pointer; line-height: 1;
+            transition: transform .18s cubic-bezier(.34,1.56,.64,1);
+        }
+        .btn:hover  { transform: scale(1.04); }
+        .btn:active { transform: scale(0.96); }
+        .btn-approve { background: var(--mockpay-green); color: var(--dark-green); }
+        .btn-deny {
+            background: rgba(208,50,56,.07); color: var(--danger-red);
+        }
+        .btn-deny:hover { background: rgba(208,50,56,.13); }
+
+        /* non-pending state */
+        .resolved-state {
+            flex: 1; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            text-align: center; padding: 24px 0;
+            gap: 12px;
+        }
+        .resolved-icon {
+            width: 56px; height: 56px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 24px;
+        }
+        .resolved-icon.ok  { background: var(--light-mint); }
+        .resolved-icon.bad { background: rgba(208,50,56,.10); }
+        .resolved-title { font-size: 20px; font-weight: 900; letter-spacing: -.03em; }
+        .resolved-sub   { font-size: 13px; font-weight: 400; color: var(--gray); }
+
+        /* ── LANG SELECT ───────────────────────────── */
+        .lang-select {
+            padding: 8px 8px;
+            border-radius: 9999px;
+            border: none;
+            color: var(--near-black);
+            background: var(--mockpay-green);
+            font-family: 'Inter', sans-serif;
+            font-size: 11px;
+            font-weight: 600;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23868685' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 6px center;
+            padding-right: 30px;
+            transition: border-color .15s, color .15s;
+        }
+        .lang-select:hover { border-color: rgba(14,15,12,.25); color: rgba(14,15,12,.6); }
+
+        /* ── RESPONSIVE ───────────────────────────── */
+        @media (max-width: 680px) {
+            .checkout-card { grid-template-columns: 1fr; }
+            .left { padding: 32px 24px; }
+            .right { padding: 32px 24px; }
+            .shell { padding: 24px 16px 60px; }
+        }
+
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(12px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+
+<div class="shell">
+    <div class="checkout-card">
+
+        <!-- ── LEFT: ORDER SUMMARY ─────────────────── -->
+        <div class="left">
+            <div class="left-logo">
+                <div class="logo-dot"></div>
+                {{t "checkout.brand"}}
+            </div>
+
+            <div class="left-label">{{t "checkout.total_amount"}}</div>
+            {{if .OriginalAmount}}
+            <div class="left-original">{{.OriginalAmount}}</div>
+            {{end}}
+            <div class="left-amount" id="display-amount">{{.Amount}}</div>
+            {{if .OriginalAmount}}
+            <div class="meta-row">
+                <span class="meta-key">{{t "checkout.discount_applied"}}</span>
+                <span class="discount-badge">{{.CouponCode}}</span>
+            </div>
+            {{end}}
+
+            <div class="meta-row">
+                <span class="meta-key">{{t "checkout.id"}}</span>
+                <span class="meta-val" style="font-size:11px;">{{.ID}}</span>
+            </div>
+            <div class="meta-row">
+                <span class="meta-key">{{t "checkout.status"}}</span>
+                <span class="status-pill s-{{lower .Status}}">{{t (printf "status.%s" .Status)}}</span>
+            </div>
+            <div class="meta-row">
+                <span class="meta-key">{{t "checkout.method"}}</span>
+                <span class="meta-val">
+                    {{if .IsPIX}}{{t "checkout.pix"}}{{end}}
+                    {{if and .IsPIX .HasCard}} / {{end}}
+                    {{if .HasCard}}{{t "checkout.card"}}{{end}}
+                </span>
+            </div>
+
+            {{if .Products}}
+            <div class="products">
+                <div class="products-label">{{t "checkout.items"}}</div>
+                {{range .Products}}
+                <div class="product-item">
+                    <div>
+                        <div class="product-name">{{.Name}}</div>
+                        <div class="product-detail">{{t "checkout.qty"}} {{.Quantity}}</div>
+                    </div>
+                    <div class="product-detail">{{.Price}}</div>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+
+            <div class="left-footer">
+                <a href="https://rine.dev" class="font-logo" target="_blank">rine</a>
+
+                <select class="lang-select" onchange="document.cookie='mockpay_lang='+this.value+';path=/;max-age=31536000';location.reload()">
+                    <option value="pt-BR" {{if eq .Lang "pt-BR"}}selected{{end}}>Português</option>
+                    <option value="en" {{if eq .Lang "en"}}selected{{end}}>English</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- ── RIGHT: PAYMENT ─────────────────────── -->
+        <div class="right">
+
+            {{if eq .Status "PENDING"}}
+
+            <div class="right-title">{{t "checkout.pay_now"}}</div>
+
+            {{if and .IsPIX .HasCard}}
+            <div class="method-tabs">
+                <button class="method-tab active" onclick="switchMethod('pix', this)">PIX</button>
+                <button class="method-tab" onclick="switchMethod('card', this)">{{t "checkout.card"}}</button>
+            </div>
+            {{end}}
+
+            {{if .IsPIX}}
+            <div class="method-panel active" id="panel-pix">
+                <div class="qr-wrap">
+                    <div class="qr-hint">{{t "checkout.scan_to_pay"}}</div>
+                    {{if .QRCodeBase64}}
+                    <img class="qr-img" src="{{.QRCodeBase64}}" alt="QR Code PIX">
+                    {{end}}
+                </div>
+            </div>
+            {{end}}
+
+            {{if .HasCard}}
+            <div class="method-panel {{if not .IsPIX}}active{{end}}" id="panel-card">
+                <div class="form-group">
+                    <label class="form-label">{{t "checkout.card_number"}}</label>
+                    <input class="form-input" type="text" placeholder="0000 0000 0000 0000" maxlength="19" id="card-number" autocomplete="cc-number">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">{{t "checkout.name_on_card"}}</label>
+                    <input class="form-input" type="text" placeholder="JOAO SILVA" autocomplete="cc-name">
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">{{t "checkout.expiry"}}</label>
+                        <input class="form-input" type="text" placeholder="MM/YY" maxlength="5" id="card-expiry" autocomplete="cc-exp">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">{{t "checkout.cvv"}}</label>
+                        <input class="form-input" type="text" placeholder="000" maxlength="4" autocomplete="cc-csc">
+                    </div>
+                </div>
+                {{if gt .MaxInstallments 1}}
+                <div class="form-group">
+                    <label class="form-label">{{t "checkout.installments"}}</label>
+                    <select class="form-select" id="installment-select">
+                        <option value="1">1x — {{.Amount}} ({{t "checkout.upfront"}})</option>
+                        {{$max := .MaxInstallments}}
+                        {{range $i := iterate $max}}
+                        {{if gt $i 1}}
+                        <option value="{{$i}}" {{if eq $i $max}}selected{{end}}>{{$i}}x</option>
+                        {{end}}
+                        {{end}}
+                    </select>
+                    <div class="installment-info" id="installment-info"></div>
+                </div>
+                {{end}}
+            </div>
+            {{end}}
+
+            {{if .ExpiresAt}}
+            <div class="expires-row">
+                <span class="expires-key">{{t "checkout.expires_at"}}</span>
+                <span class="expires-val">{{.ExpiresAt}}</span>
+            </div>
+            {{end}}
+
+            <div class="actions">
+                <form method="POST" action="/checkout/{{.ID}}/approve">
+                    <button type="submit" class="btn btn-approve">{{t "checkout.approve"}}</button>
+                </form>
+                <form method="POST" action="/checkout/{{.ID}}/deny">
+                    <button type="submit" class="btn btn-deny">{{t "checkout.deny"}}</button>
+                </form>
+            </div>
+
+            {{else}}
+
+            <div class="resolved-state">
+                {{if eq .Status "APPROVED"}}
+                <div class="resolved-icon ok">✓</div>
+                <div class="resolved-title">{{t "checkout.approved_title"}}</div>
+                <div class="resolved-sub">{{t "checkout.approved_sub"}}</div>
+                {{else if eq .Status "DENIED"}}
+                <div class="resolved-icon bad">✕</div>
+                <div class="resolved-title">{{t "checkout.denied_title"}}</div>
+                <div class="resolved-sub">{{t "checkout.denied_sub"}}</div>
+                {{else}}
+                <div class="resolved-icon bad">⏱</div>
+                <div class="resolved-title">{{t "checkout.expired_title"}}</div>
+                <div class="resolved-sub">{{t "checkout.expired_sub"}}</div>
+                {{end}}
+            </div>
+
+            {{end}}
+
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchMethod(method, el) {
+        document.querySelectorAll('.method-tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.method-panel').forEach(p => p.classList.remove('active'));
+        el.classList.add('active');
+        document.getElementById('panel-' + method).classList.add('active');
+    }
+
+    const amount = {{.RawAmount}};
+    const rate = {{.InterestRate}};
+    const i18n_upfront = '{{t "js.upfront"}}';
+    const i18n_installmentOf = '{{t "js.installment_x_of"}}';
+    const i18n_total = '{{t "js.total"}}';
+
+    function formatCents(c) {
+        return 'R$ ' + (c / 100).toFixed(2).replace('.', ',');
+    }
+    function calcInstallment(n) {
+        const total = amount * (1 + rate / 100 * n);
+        const per = Math.floor(total / n);
+        const last = total - per * (n - 1);
+        return { total: Math.round(total), per, last: Math.round(last) };
+    }
+    function updateInstallment() {
+        const sel = document.getElementById('installment-select');
+        const info = document.getElementById('installment-info');
+        if (!sel || !info) return;
+        const n = parseInt(sel.value);
+        const c = calcInstallment(n);
+        const totalStr = formatCents(c.total);
+        info.textContent = n === 1
+            ? totalStr + i18n_upfront
+            : n + i18n_installmentOf + formatCents(c.per) + ' = ' + totalStr + i18n_total;
+        document.getElementById('display-amount').textContent = totalStr;
+    }
+
+    const cardInput = document.getElementById('card-number');
+    if (cardInput) {
+        cardInput.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g, '').substring(0, 16);
+            e.target.value = v.replace(/(.{4})/g, '$1 ').trim();
+        });
+    }
+    const expiryInput = document.getElementById('card-expiry');
+    if (expiryInput) {
+        expiryInput.addEventListener('input', e => {
+            let v = e.target.value.replace(/\D/g, '').substring(0, 4);
+            if (v.length > 2) v = v.substring(0, 2) + '/' + v.substring(2);
+            e.target.value = v;
+        });
+    }
+    const instSel = document.getElementById('installment-select');
+    if (instSel) {
+        instSel.addEventListener('change', updateInstallment);
+        updateInstallment();
+    }
+</script>
+</body>
+</html>
+{{end}}

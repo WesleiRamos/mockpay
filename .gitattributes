@@ -1,0 +1,29 @@
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Go
+*.go text diff=golang
+
+# Web
+*.html text diff=html
+*.css text diff=css
+*.js text diff=javascript
+*.json text
+
+# Docs
+*.md text diff=markdown
+
+# Config
+*.toml text
+*.yaml text
+*.yml text
+.env.example text
+
+# Shell
+*.sh text eol=lf
+
+# Binary
+*.db binary
+*.exe binary
+*.png binary
+*.jpg binary

@@ -1,0 +1,572 @@
+{{define "dashboard.html"}}
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{t "dashboard.page_title"}}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Righteous&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --near-black:   #0e0f0c;
+            --mockpay-green:   #9fe870;
+            --dark-green:   #163300;
+            --light-mint:   #e2f6d5;
+            --pastel-green: #cdffad;
+            --gray:         #868685;
+            --warm-dark:    #454745;
+            --light-surf:   #e8ebe6;
+            --bg:           #f7f8f5;
+            --white:        #ffffff;
+            --ring:         rgba(14,15,12,0.12);
+            --pos-green:    #054d28;
+            --danger-red:   #d03238;
+            --warn-yellow:  #ffd11a;
+
+            --font-display: 'Inter', sans-serif;
+            --font-body:    'Inter', sans-serif;
+            --calt: "calt" 1;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        html { font-feature-settings: var(--calt); }
+
+        body {
+            font-family: var(--font-body);
+            background: var(--bg);
+            color: var(--near-black);
+            min-height: 100vh;
+            font-weight: 600;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ── NAV ───────────────────────────────────── */
+        nav {
+            background: var(--white);
+            padding: 0 40px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 20;
+        }
+
+        .font-logo {
+            font-family: 'Righteous', cursive;
+            text-transform: lowercase;
+            letter-spacing: -0.05em;
+            font-size: 1.6rem;
+            text-decoration: none;
+            color: var(--near-black);
+        }
+
+        .nav-logo {
+            font-size: 22px;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 0.85;
+            color: var(--near-black);
+            font-feature-settings: var(--calt);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .nav-logo-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--mockpay-green);
+        }
+
+        /* ── PAGE ──────────────────────────────────── */
+        .page {
+            max-width: 1160px;
+            margin: 0 auto;
+            padding: 0px 40px 80px;
+        }
+
+        /* ── STATS ROW ─────────────────────────────── */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 32px;
+        }
+        .stat-card {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 20px 24px;
+            cursor: pointer;
+            transition: transform .15s cubic-bezier(.34,1.56,.64,1), box-shadow .15s;
+        }
+        .stat-card:hover {
+            box-shadow: 0 4px 16px rgba(14,15,12,0.07);
+        }
+        .stat-card.active {
+            box-shadow: 0 4px 16px rgba(14,15,12,0.07);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--gray);
+            margin-bottom: 8px;
+        }
+        .stat-num {
+            font-size: 40px;
+            font-weight: 900;
+            line-height: 0.9;
+            letter-spacing: -0.03em;
+            color: var(--near-black);
+            font-feature-settings: var(--calt);
+        }
+        .stat-num.green  { color: var(--pos-green); }
+        .stat-num.yellow { color: #9a6c00; }
+        .stat-num.red    { color: var(--danger-red); }
+
+        /* ── TABLE CARD ────────────────────────────── */
+        .table-card {
+            background: var(--white);
+            border-radius: 30px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 24px 28px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid rgba(14,15,12,0.06);
+        }
+        .table-title {
+            font-size: 18px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            line-height: 0.85;
+            font-feature-settings: var(--calt);
+        }
+        .table-meta {
+            font-size: 13px;
+            font-weight: 400;
+            margin-top: 8px;
+            color: var(--gray);
+        }
+        .refresh-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--warm-dark);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            background: rgba(14,15,12,0.05);
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-body);
+            transition: transform .15s cubic-bezier(.34,1.56,.64,1);
+        }
+        .refresh-btn .countdown-ring,
+        .refresh-btn .countdown-text {
+            display: none;
+        }
+        .refresh-btn.on .countdown-ring,
+        .refresh-btn.on .countdown-text {
+            display: inline-flex;
+        }
+        .refresh-btn .pause-icon {
+            display: inline-flex;
+            font-size: 12px;
+        }
+        .refresh-btn.on .pause-icon {
+            display: none;
+        }
+
+        .countdown-ring {
+            width: 16px;
+            height: 16px;
+            position: relative;
+        }
+        .countdown-ring svg {
+            transform: rotate(-90deg);
+        }
+        .countdown-ring circle {
+            fill: none;
+            stroke: var(--mockpay-green);
+            stroke-width: 2;
+            stroke-dasharray: 44;
+            stroke-dashoffset: 0;
+            animation: ring-drain 5s linear forwards;
+            stroke-linecap: round;
+        }
+        @keyframes ring-drain {
+            from { stroke-dashoffset: 0; }
+            to   { stroke-dashoffset: 44; }
+        }
+
+        /* ── TABLE ─────────────────────────────────── */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        thead tr {
+            border-bottom: 1px solid rgba(14,15,12,0.06);
+        }
+        th {
+            padding: 12px 20px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: var(--gray);
+        }
+        th.right { text-align: right; }
+
+        tbody tr {
+            border-bottom: 1px solid rgba(14,15,12,0.05);
+            transition: background .1s;
+        }
+        tbody tr:last-child { border-bottom: none; }
+        tbody tr:hover { background: rgba(14,15,12,0.025); }
+
+        td {
+            padding: 14px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            vertical-align: middle;
+        }
+
+        .td-id {
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--warm-dark);
+            font-variant-numeric: tabular-nums;
+        }
+        .td-amount {
+            font-size: 15px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            text-align: right;
+            font-feature-settings: var(--calt);
+            font-variant-numeric: tabular-nums;
+        }
+        .td-method {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--warm-dark);
+        }
+        .td-date {
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--gray);
+        }
+
+        /* ── STATUS PILLS ──────────────────────────── */
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .status-pill::before {
+            content: '';
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: currentColor;
+            opacity: .8;
+        }
+        .s-pending  { background: rgba(255,209,26,.18);  color: #7a5500; }
+        .s-approved { background: var(--light-mint);      color: var(--pos-green); }
+        .s-denied   { background: rgba(208,50,56,.10);   color: var(--danger-red); }
+        .s-expired  { background: rgba(134,134,133,.12); color: var(--warm-dark); }
+
+        /* ── TYPE CHIP ─────────────────────────────── */
+        .type-chip {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+        }
+        .t-billing { background: var(--bg); color: var(--warm-dark); }
+        .t-pix     { background: var(--light-mint); color: var(--dark-green); }
+
+        /* ── VIEW LINK ─────────────────────────────── */
+        .view-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--near-black);
+            background: transparent;
+            box-shadow: var(--ring) 0 0 0 1px;
+            text-decoration: none;
+            transition: transform .15s cubic-bezier(.34,1.56,.64,1), background .1s;
+            white-space: nowrap;
+        }
+        .view-link:hover  { background: var(--mockpay-green); color: var(--dark-green); box-shadow: none; }
+
+        /* ── EMPTY ─────────────────────────────────── */
+        .empty-state {
+            padding: 80px 40px;
+            text-align: center;
+        }
+        .empty-icon {
+            width: 64px; height: 64px;
+            border-radius: 20px;
+            background: var(--light-mint);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 20px;
+        }
+        .empty-title {
+            font-size: 24px;
+            font-weight: 900;
+            letter-spacing: -0.02em;
+            line-height: 0.9;
+            margin-bottom: 10px;
+            font-feature-settings: var(--calt);
+        }
+        .empty-desc {
+            font-size: 14px;
+            font-weight: 400;
+            color: var(--gray);
+            font-family: monospace;
+        }
+
+        /* ── FOOTER ────────────────────────────────── */
+        .page-footer {
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 12px;
+            font-weight: 400;
+            color: var(--gray);
+        }
+
+        /* ── LANG SELECT ───────────────────────────── */
+        .lang-select {
+            padding: 5px 10px;
+            border-radius: 9999px;
+            background: var(--white);
+            border: none;
+            font-family: var(--font-body);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--near-black);
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23868685' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 8px center;
+            padding-right: 24px;
+            transition: border-color .15s;
+        }
+        .lang-select:hover { border-color: var(--near-black); }
+
+        /* ── ANIMATIONS ────────────────────────────── */
+        @keyframes fade-up {
+            from { opacity: 0; transform: translateY(10px); }
+            to   { opacity: 1; transform: translateY(0);    }
+        }
+        .stats  { animation: fade-up .4s ease both; }
+        .table-card { animation: fade-up .4s .08s ease both; }
+
+        tbody tr:nth-child(1) { animation: fade-up .3s .05s ease both; }
+        tbody tr:nth-child(2) { animation: fade-up .3s .10s ease both; }
+        tbody tr:nth-child(3) { animation: fade-up .3s .15s ease both; }
+        tbody tr:nth-child(4) { animation: fade-up .3s .20s ease both; }
+        tbody tr:nth-child(5) { animation: fade-up .3s .25s ease both; }
+        tbody tr:nth-child(n+6) { animation: fade-up .3s .30s ease both; }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-logo" style="justify-content:center;width:100%;">
+        <div class="nav-logo-dot"></div>
+        {{t "dashboard.nav_brand"}}
+    </div>
+</nav>
+
+<main class="page">
+
+    <div class="stats" style="margin-top:32px;">
+        <div class="stat-card" id="card-all" onclick="filter('all')" style="cursor:pointer;">
+            <div class="stat-label">{{t "dashboard.total"}}</div>
+            <div class="stat-num" id="cnt-all">0</div>
+        </div>
+        <div class="stat-card" id="card-pending" onclick="filter('PENDING')" style="cursor:pointer;">
+            <div class="stat-label">{{t "dashboard.pending"}}</div>
+            <div class="stat-num yellow" id="cnt-pending">0</div>
+        </div>
+        <div class="stat-card" id="card-approved" onclick="filter('APPROVED')" style="cursor:pointer;">
+            <div class="stat-label">{{t "dashboard.approved"}}</div>
+            <div class="stat-num green" id="cnt-approved">0</div>
+        </div>
+        <div class="stat-card" id="card-denied" onclick="filter('DENIED')">
+            <div class="stat-label">{{t "dashboard.denied_expired"}}</div>
+            <div class="stat-num red" id="cnt-failed">0</div>
+        </div>
+    </div>
+
+    <div class="table-card">
+        <div class="table-header">
+            <div>
+                <div class="table-title">{{t "dashboard.transactions"}}</div>
+                <div class="table-meta" id="showing-label">{{t "dashboard.showing_all"}}</div>
+            </div>
+            <button class="refresh-btn on" id="refresh-btn" onclick="toggleRefresh()">
+                <div class="countdown-ring">
+                    <svg width="16" height="16" viewBox="0 0 16 16">
+                        <circle cx="8" cy="8" r="6"/>
+                    </svg>
+                </div>
+                <span class="countdown-text">{{t "dashboard.refreshing_in"}} <span id="countdown">5</span>{{t "dashboard.seconds_short"}}</span>
+                <span class="pause-icon">{{t "dashboard.auto_refresh_off"}}</span>
+            </button>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>{{t "dashboard.col_id"}}</th>
+                    <th class="right">{{t "dashboard.col_amount"}}</th>
+                    <th>{{t "dashboard.col_status"}}</th>
+                    <th>{{t "dashboard.col_method"}}</th>
+                    <th>{{t "dashboard.col_type"}}</th>
+                    <th>{{t "dashboard.col_created"}}</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody id="payments-body">
+                {{range .Payments}}
+                <tr data-status="{{.Status}}">
+                    <td class="td-id">{{.ID}}</td>
+                    <td class="td-amount">{{.Amount}}</td>
+                    <td><span class="status-pill s-{{lower .Status}}">{{t (printf "status.%s" .Status)}}</span></td>
+                    <td class="td-method">{{.Method}}</td>
+                    <td><span class="type-chip t-{{lower .Type}}">{{t (printf "type.%s" .Type)}}</span></td>
+                    <td class="td-date">{{.CreatedAt}}</td>
+                    <td><a class="view-link" href="/checkout/{{.ID}}">{{t "dashboard.view"}}</a></td>
+                </tr>
+                {{else}}
+                <tr>
+                    <td colspan="7">
+                        <div class="empty-state">
+                            <div class="empty-icon">⬡</div>
+                            <div class="empty-title">{{t "dashboard.empty_title"}}</div>
+                            <div class="empty-desc">{{t "dashboard.empty_desc"}}</div>
+                        </div>
+                    </td>
+                </tr>
+                {{end}}
+            </tbody>
+        </table>
+    </div>
+
+    <footer class="page-footer">
+        <a href="https://rine.dev" class="font-logo" target="_blank">rine</a>
+        <select class="lang-select" onchange="document.cookie='mockpay_lang='+this.value+';path=/;max-age=31536000';location.reload()">
+            <option value="pt-BR" {{if eq .Lang "pt-BR"}}selected{{end}}>Português</option>
+            <option value="en" {{if eq .Lang "en"}}selected{{end}}>English</option>
+        </select>
+    </footer>
+
+</main>
+
+<script>
+    const i18n_showingAll = '{{t "js.showing_all"}}';
+    const i18n_showingFiltered = '{{t "js.showing_filtered"}}';
+
+    // ── Counts ──────────────────────────────────────
+    const rows = [...document.querySelectorAll('#payments-body tr[data-status]')];
+    const count = s => rows.filter(r => r.dataset.status === s).length;
+
+    document.getElementById('cnt-all').textContent     = rows.length;
+    document.getElementById('cnt-pending').textContent  = count('PENDING');
+    document.getElementById('cnt-approved').textContent = count('APPROVED');
+    document.getElementById('cnt-failed').textContent   = count('DENIED') + count('EXPIRED');
+
+    // ── Filter ──────────────────────────────────────
+    let current = 'all';
+    function filter(status) {
+        current = status;
+        rows.forEach(r => {
+            r.style.display = (status === 'all' || r.dataset.status === status) ? '' : 'none';
+        });
+
+        ['all','pending','approved','denied'].forEach(s => {
+            const el = document.getElementById('card-' + s);
+            el && el.classList.remove('active');
+        });
+
+        const map = { 'all':'all', 'PENDING':'pending', 'APPROVED':'approved', 'DENIED':'denied', 'EXPIRED':'denied' };
+        const card = document.getElementById('card-' + map[status]);
+        card && card.classList.add('active');
+
+        const visible = status === 'all' ? rows.length : count(status);
+        const label = document.getElementById('showing-label');
+        if (status === 'all') {
+            label.textContent = i18n_showingAll.replace('%d', rows.length);
+        } else {
+            label.textContent = i18n_showingFiltered.replace('%d', visible).replace('%s', status.toLowerCase());
+        }
+    }
+
+    // ── Countdown ───────────────────────────────────
+    let autoRefresh = true;
+    let secs = 5;
+    let timer;
+    const cd = document.getElementById('countdown');
+    const ring = document.querySelector('.countdown-ring circle');
+    const btn = document.getElementById('refresh-btn');
+
+    function startTimer() {
+        clearInterval(timer);
+        secs = 5;
+        cd.textContent = secs;
+        ring.style.animation = 'none';
+        ring.offsetHeight;
+        ring.style.animation = 'ring-drain 5s linear forwards';
+        timer = setInterval(() => {
+            if (!autoRefresh) return;
+            if (--secs <= 0) location.reload();
+            else cd.textContent = secs;
+        }, 1000);
+    }
+
+    function toggleRefresh() {
+        autoRefresh = !autoRefresh;
+        btn.classList.toggle('on', autoRefresh);
+        if (autoRefresh) startTimer();
+    }
+
+    startTimer();
+</script>
+
+</body>
+</html>
+{{end}}

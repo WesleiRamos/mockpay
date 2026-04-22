@@ -44,6 +44,8 @@ type Billing struct {
 	Installments    int             `json:"installments"`
 	InterestRate    float64         `json:"interest_rate"`
 	InstallmentList []Installment   `json:"installment_list,omitempty"`
+	ExternalID      string          `json:"external_id,omitempty"`
+	Metadata        map[string]string `json:"metadata,omitempty"`
 	CreatedAt       string          `json:"created_at"`
 	UpdatedAt       string          `json:"updated_at"`
 }
@@ -75,6 +77,8 @@ type CreateBillingRequest struct {
 	Installments  int              `json:"installments,omitempty"`
 	InterestRate  float64          `json:"interest_rate,omitempty"`
 	CouponCode    string           `json:"coupon_code,omitempty"`
+	ExternalID    string           `json:"external_id,omitempty"`
+	Metadata      map[string]string `json:"metadata,omitempty"`
 }
 
 func NowTimestamp() string {

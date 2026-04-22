@@ -110,6 +110,8 @@ func (bs *BillingService) Create(req domain.CreateBillingRequest) (*domain.Billi
 		Installments:  installments,
 		InterestRate:  interestRate,
 		InstallmentList: domain.CalculateInstallments(finalAmount, installments, interestRate),
+		ExternalID:    req.ExternalID,
+		Metadata:      req.Metadata,
 		CreatedAt:     now,
 		UpdatedAt:     now,
 	}

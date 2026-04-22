@@ -58,6 +58,8 @@ func (s *MemoryStore) migrate() {
 			installments INTEGER DEFAULT 1,
 			interest_rate REAL DEFAULT 0,
 			installment_list TEXT DEFAULT '[]',
+			external_id TEXT DEFAULT '',
+			metadata TEXT DEFAULT '{}',
 			created_at TEXT NOT NULL,
 			updated_at TEXT NOT NULL
 		)`,
@@ -90,6 +92,8 @@ func (s *MemoryStore) migrate() {
 			platform_fee INTEGER DEFAULT 0,
 			expires_at TEXT DEFAULT '',
 			customer TEXT,
+			external_id TEXT DEFAULT '',
+			metadata TEXT DEFAULT '{}',
 			created_at TEXT NOT NULL,
 			updated_at TEXT NOT NULL
 		)`,
@@ -133,12 +137,14 @@ func (s *MemoryStore) CreateBilling(b *domain.Billing) {
 		nextBilling = b.NextBilling
 	}
 
+	metadata, _ := json.Marshal(b.Metadata)
+
 	_, err := s.db.Exec(`INSERT INTO billings
-		(id, url, amount, original_amount, coupon_code, status, dev_mode, methods, products, frequency, next_billing, customer, return_url, completion_url, installments, interest_rate, installment_list, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		(id, url, amount, original_amount, coupon_code, status, dev_mode, methods, products, frequency, next_billing, customer, return_url, completion_url, installments, interest_rate, installment_list, external_id, metadata, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		b.ID, b.URL, b.Amount, b.OriginalAmount, b.CouponCode, string(b.Status), boolToInt(b.DevMode), string(methods), string(products),
 		string(b.Frequency), nextBilling, customer, b.ReturnURL, b.CompletionURL,
-		b.Installments, b.InterestRate, string(installments), b.CreatedAt, b.UpdatedAt)
+		b.Installments, b.InterestRate, string(installments), b.ExternalID, string(metadata), b.CreatedAt, b.UpdatedAt)
 	if err != nil {
 		log.Printf("CreateBilling error: %v", err)
 	}
@@ -149,7 +155,7 @@ func (s *MemoryStore) GetBilling(id string) (*domain.Billing, bool) {
 	defer s.mu.RUnlock()
 
 	row := s.db.QueryRow(`SELECT id, url, amount, original_amount, coupon_code, status, dev_mode, methods, products, frequency, next_billing, customer,
-		return_url, completion_url, installments, interest_rate, installment_list, created_at, updated_at
+		return_url, completion_url, installments, interest_rate, installment_list, external_id, metadata, created_at, updated_at
 		FROM billings WHERE id = ?`, id)
 
 	return s.scanBilling(row)
@@ -160,7 +166,7 @@ func (s *MemoryStore) ListBillings() []*domain.Billing {
 	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(`SELECT id, url, amount, original_amount, coupon_code, status, dev_mode, methods, products, frequency, next_billing, customer,
-		return_url, completion_url, installments, interest_rate, installment_list, created_at, updated_at
+		return_url, completion_url, installments, interest_rate, installment_list, external_id, metadata, created_at, updated_at
 		FROM billings ORDER BY created_at DESC`)
 	if err != nil {
 		return nil
@@ -193,7 +199,7 @@ func (s *MemoryStore) ListBillingsByStatus(status domain.BillingStatus) []*domai
 	defer s.mu.RUnlock()
 
 	rows, err := s.db.Query(`SELECT id, url, amount, original_amount, coupon_code, status, dev_mode, methods, products, frequency, next_billing, customer,
-		return_url, completion_url, installments, interest_rate, installment_list, created_at, updated_at
+		return_url, completion_url, installments, interest_rate, installment_list, external_id, metadata, created_at, updated_at
 		FROM billings WHERE status = ? ORDER BY created_at DESC`, string(status))
 	if err != nil {
 		return nil
@@ -230,10 +236,12 @@ func (s *MemoryStore) scanBilling(row *sql.Row) (*domain.Billing, bool) {
 	var customerJSON sql.NullString
 	var nextBilling sql.NullString
 	var couponCode sql.NullString
+	var externalID sql.NullString
+	var metadataJSON sql.NullString
 
 	err := row.Scan(&b.ID, &b.URL, &b.Amount, &b.OriginalAmount, &couponCode, &status, &devMode, &methodsJSON, &productsJSON, &frequency,
 		&nextBilling, &customerJSON, &b.ReturnURL, &b.CompletionURL,
-		&b.Installments, &b.InterestRate, &installmentsJSON, &b.CreatedAt, &b.UpdatedAt)
+		&b.Installments, &b.InterestRate, &installmentsJSON, &externalID, &metadataJSON, &b.CreatedAt, &b.UpdatedAt)
 	if err != nil {
 		return nil, false
 	}
@@ -243,6 +251,12 @@ func (s *MemoryStore) scanBilling(row *sql.Row) (*domain.Billing, bool) {
 	b.Frequency = domain.BillingFrequency(frequency)
 	if couponCode.Valid {
 		b.CouponCode = couponCode.String
+	}
+	if externalID.Valid {
+		b.ExternalID = externalID.String
+	}
+	if metadataJSON.Valid {
+		json.Unmarshal([]byte(metadataJSON.String), &b.Metadata)
 	}
 
 	json.Unmarshal([]byte(methodsJSON), &b.Methods)
@@ -269,10 +283,12 @@ func (s *MemoryStore) scanBillingRow(rows *sql.Rows) (*domain.Billing, bool) {
 	var customerJSON sql.NullString
 	var nextBilling sql.NullString
 	var couponCode sql.NullString
+	var externalID sql.NullString
+	var metadataJSON sql.NullString
 
 	err := rows.Scan(&b.ID, &b.URL, &b.Amount, &b.OriginalAmount, &couponCode, &status, &devMode, &methodsJSON, &productsJSON, &frequency,
 		&nextBilling, &customerJSON, &b.ReturnURL, &b.CompletionURL,
-		&b.Installments, &b.InterestRate, &installmentsJSON, &b.CreatedAt, &b.UpdatedAt)
+		&b.Installments, &b.InterestRate, &installmentsJSON, &externalID, &metadataJSON, &b.CreatedAt, &b.UpdatedAt)
 	if err != nil {
 		return nil, false
 	}
@@ -282,6 +298,12 @@ func (s *MemoryStore) scanBillingRow(rows *sql.Rows) (*domain.Billing, bool) {
 	b.Frequency = domain.BillingFrequency(frequency)
 	if couponCode.Valid {
 		b.CouponCode = couponCode.String
+	}
+	if externalID.Valid {
+		b.ExternalID = externalID.String
+	}
+	if metadataJSON.Valid {
+		json.Unmarshal([]byte(metadataJSON.String), &b.Metadata)
 	}
 
 	json.Unmarshal([]byte(methodsJSON), &b.Methods)
@@ -473,10 +495,12 @@ func (s *MemoryStore) CreatePixCharge(p *domain.PixCharge) {
 		customer = &s
 	}
 
-	_, err := s.db.Exec(`INSERT INTO pix_charges (id, amount, status, dev_mode, br_code, br_code_base64, platform_fee, expires_at, customer, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+	pixMeta, _ := json.Marshal(p.Metadata)
+
+	_, err := s.db.Exec(`INSERT INTO pix_charges (id, amount, status, dev_mode, br_code, br_code_base64, platform_fee, expires_at, customer, external_id, metadata, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		p.ID, p.Amount, string(p.Status), boolToInt(p.DevMode), p.BrCode, p.BrCodeBase64,
-		p.PlatformFee, p.ExpiresAt, customer, p.CreatedAt, p.UpdatedAt)
+		p.PlatformFee, p.ExpiresAt, customer, p.ExternalID, string(pixMeta), p.CreatedAt, p.UpdatedAt)
 	if err != nil {
 		log.Printf("CreatePixCharge error: %v", err)
 	}
@@ -486,7 +510,7 @@ func (s *MemoryStore) GetPixCharge(id string) (*domain.PixCharge, bool) {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	row := s.db.QueryRow(`SELECT id, amount, status, dev_mode, br_code, br_code_base64, platform_fee, expires_at, customer, created_at, updated_at
+	row := s.db.QueryRow(`SELECT id, amount, status, dev_mode, br_code, br_code_base64, platform_fee, expires_at, customer, external_id, metadata, created_at, updated_at
 		FROM pix_charges WHERE id = ?`, id)
 	return s.scanPixCharge(row)
 }
@@ -495,7 +519,7 @@ func (s *MemoryStore) ListPixCharges() []*domain.PixCharge {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
 
-	rows, err := s.db.Query(`SELECT id, amount, status, dev_mode, br_code, br_code_base64, platform_fee, expires_at, customer, created_at, updated_at
+	rows, err := s.db.Query(`SELECT id, amount, status, dev_mode, br_code, br_code_base64, platform_fee, expires_at, customer, external_id, metadata, created_at, updated_at
 		FROM pix_charges ORDER BY created_at DESC`)
 	if err != nil {
 		return nil
@@ -528,9 +552,11 @@ func (s *MemoryStore) scanPixCharge(row *sql.Row) (*domain.PixCharge, bool) {
 	var status string
 	var devMode int
 	var customerJSON sql.NullString
+	var pixExternalID sql.NullString
+	var pixMetadata sql.NullString
 
 	err := row.Scan(&p.ID, &p.Amount, &status, &devMode, &p.BrCode, &p.BrCodeBase64,
-		&p.PlatformFee, &p.ExpiresAt, &customerJSON, &p.CreatedAt, &p.UpdatedAt)
+		&p.PlatformFee, &p.ExpiresAt, &customerJSON, &pixExternalID, &pixMetadata, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, false
 	}
@@ -542,6 +568,12 @@ func (s *MemoryStore) scanPixCharge(row *sql.Row) (*domain.PixCharge, bool) {
 		var ref domain.CustomerRef
 		json.Unmarshal([]byte(customerJSON.String), &ref)
 		p.Customer = &ref
+	}
+	if pixExternalID.Valid {
+		p.ExternalID = pixExternalID.String
+	}
+	if pixMetadata.Valid {
+		json.Unmarshal([]byte(pixMetadata.String), &p.Metadata)
 	}
 	return &p, true
 }
@@ -551,9 +583,11 @@ func (s *MemoryStore) scanPixChargeRow(rows *sql.Rows) (*domain.PixCharge, bool)
 	var status string
 	var devMode int
 	var customerJSON sql.NullString
+	var pixExternalID sql.NullString
+	var pixMetadata sql.NullString
 
 	err := rows.Scan(&p.ID, &p.Amount, &status, &devMode, &p.BrCode, &p.BrCodeBase64,
-		&p.PlatformFee, &p.ExpiresAt, &customerJSON, &p.CreatedAt, &p.UpdatedAt)
+		&p.PlatformFee, &p.ExpiresAt, &customerJSON, &pixExternalID, &pixMetadata, &p.CreatedAt, &p.UpdatedAt)
 	if err != nil {
 		return nil, false
 	}
@@ -565,6 +599,12 @@ func (s *MemoryStore) scanPixChargeRow(rows *sql.Rows) (*domain.PixCharge, bool)
 		var ref domain.CustomerRef
 		json.Unmarshal([]byte(customerJSON.String), &ref)
 		p.Customer = &ref
+	}
+	if pixExternalID.Valid {
+		p.ExternalID = pixExternalID.String
+	}
+	if pixMetadata.Valid {
+		json.Unmarshal([]byte(pixMetadata.String), &p.Metadata)
 	}
 	return &p, true
 }

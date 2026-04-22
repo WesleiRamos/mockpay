@@ -76,6 +76,8 @@ func (ps *PixService) Create(req domain.CreatePixRequest) (*domain.PixCharge, er
 		PlatformFee:  80,
 		ExpiresAt:    expiresAt,
 		Customer:     customerRef,
+		ExternalID:   req.ExternalID,
+		Metadata:     req.Metadata,
 		CreatedAt:    now,
 		UpdatedAt:    now,
 	}

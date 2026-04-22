@@ -490,10 +490,10 @@
             {{end}}
 
             <div class="actions">
-                <form method="POST" action="/checkout/{{.ID}}/approve">
+                <form method="GET" action="/checkout/{{.ID}}/approve">
                     <button type="submit" class="btn btn-approve">{{t "checkout.approve"}}</button>
                 </form>
-                <form method="POST" action="/checkout/{{.ID}}/deny">
+                <form method="GET" action="/checkout/{{.ID}}/deny">
                     <button type="submit" class="btn btn-deny">{{t "checkout.deny"}}</button>
                 </form>
             </div>

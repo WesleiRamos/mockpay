@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/gofiber/fiber/v3/middleware/cors"
 	"github.com/wesleiramos/mockpay/config"
 	"github.com/wesleiramos/mockpay/internal/handler"
 	"github.com/wesleiramos/mockpay/internal/middleware"
@@ -35,6 +36,12 @@ func main() {
 	app := fiber.New(fiber.Config{
 		AppName: "MockPay",
 	})
+
+	app.Use(cors.New(cors.Config{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{"GET", "POST", "OPTIONS"},
+		AllowHeaders: []string{"Authorization", "Content-Type"},
+	}))
 
 	api := app.Group("/v1", middleware.Auth(cfg))
 	api.Post("/billing/create", billingH.Create)

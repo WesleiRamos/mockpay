@@ -1,0 +1,7 @@
+{
+  "name": "mockpay-example",
+  "type": "module",
+  "scripts": {
+    "start": "bun run index.ts"
+  }
+}

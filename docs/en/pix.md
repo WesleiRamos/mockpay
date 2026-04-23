@@ -18,6 +18,10 @@ POST /v1/pix/create
     "email": "joao@email.com",
     "cellphone": "11999999999",
     "tax_id": "12345678901"
+  },
+  "external_id": "charge-67890",
+  "metadata": {
+    "order_ref": "ORD-2026-001"
   }
 }
 ```
@@ -30,6 +34,8 @@ POST /v1/pix/create
 | `expires_in` | int | no | Expiration in seconds (default: 3600 = 1 hour) |
 | `description` | string | no | Payment description |
 | `customer` | object | no | Customer data (creates a new customer) |
+| `external_id` | string | no | Your own identifier for this charge |
+| `metadata` | object | no | Key-value pairs for additional data |
 
 ### Response
 
@@ -45,6 +51,10 @@ POST /v1/pix/create
     "platform_fee": 80,
     "expires_at": "2026-04-21T13:00:00.000",
     "customer": {...},
+    "external_id": "charge-67890",
+    "metadata": {
+      "order_ref": "ORD-2026-001"
+    },
     "created_at": "2026-04-21T12:00:00.000",
     "updated_at": "2026-04-21T12:00:00.000"
   },

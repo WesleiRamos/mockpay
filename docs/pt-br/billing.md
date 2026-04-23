@@ -32,7 +32,12 @@ POST /v1/billing/create
   },
   "installments": 3,
   "interest_rate": 2.5,
-  "coupon_code": "DESCONTO20"
+  "coupon_code": "DESCONTO20",
+  "external_id": "pedido-12345",
+  "metadata": {
+    "origem": "site",
+    "canal": "organico"
+  }
 }
 ```
 
@@ -55,6 +60,8 @@ POST /v1/billing/create
 | `installments` | int | não | Número de parcelas (1-12, padrão 1) |
 | `interest_rate` | float | não | Taxa de juros mensal % (padrão: variável de ambiente `MOCKPAY_INTEREST_RATE`) |
 | `coupon_code` | string | não | Código do cupom para aplicar desconto no valor total |
+| `external_id` | string | não | Seu próprio identificador para esta cobrança |
+| `metadata` | object | não | Pares chave-valor para dados adicionais |
 
 O `amount` total da cobrança é a soma de todos os produtos (`price * quantity`).
 
@@ -77,6 +84,11 @@ O `amount` total da cobrança é a soma de todos os produtos (`price * quantity`
     "installments": 3,
     "interest_rate": 2.5,
     "installment_list": [...],
+    "external_id": "pedido-12345",
+    "metadata": {
+      "origem": "site",
+      "canal": "organico"
+    },
     "created_at": "2026-04-21T12:00:00.000",
     "updated_at": "2026-04-21T12:00:00.000"
   },

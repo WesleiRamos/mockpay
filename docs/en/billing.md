@@ -32,7 +32,12 @@ POST /v1/billing/create
   },
   "installments": 3,
   "interest_rate": 2.5,
-  "coupon_code": "DESCONTO20"
+  "coupon_code": "DESCONTO20",
+  "external_id": "order-12345",
+  "metadata": {
+    "source": "website",
+    "channel": "organic"
+  }
 }
 ```
 
@@ -55,6 +60,8 @@ POST /v1/billing/create
 | `installments` | int | no | Number of installments (1-12, default 1) |
 | `interest_rate` | float | no | Monthly interest rate % (default: env `MOCKPAY_INTEREST_RATE`) |
 | `coupon_code` | string | no | Coupon code to apply a discount to the total amount |
+| `external_id` | string | no | Your own identifier for this billing |
+| `metadata` | object | no | Key-value pairs for additional data |
 
 The total billing `amount` is the sum of all products (`price * quantity`).
 
@@ -77,6 +84,11 @@ The total billing `amount` is the sum of all products (`price * quantity`).
     "installments": 3,
     "interest_rate": 2.5,
     "installment_list": [...],
+    "external_id": "order-12345",
+    "metadata": {
+      "source": "website",
+      "channel": "organic"
+    },
     "created_at": "2026-04-21T12:00:00.000",
     "updated_at": "2026-04-21T12:00:00.000"
   },

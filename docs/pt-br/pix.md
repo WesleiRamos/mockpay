@@ -18,6 +18,10 @@ POST /v1/pix/create
     "email": "joao@email.com",
     "cellphone": "11999999999",
     "tax_id": "12345678901"
+  },
+  "external_id": "cobranca-67890",
+  "metadata": {
+    "ref_pedido": "PED-2026-001"
   }
 }
 ```
@@ -30,6 +34,8 @@ POST /v1/pix/create
 | `expires_in` | int | não | Expiração em segundos (padrão: 3600 = 1 hora) |
 | `description` | string | não | Descrição do pagamento |
 | `customer` | object | não | Dados do cliente (cria um novo cliente) |
+| `external_id` | string | não | Seu próprio identificador para esta cobrança |
+| `metadata` | object | não | Pares chave-valor para dados adicionais |
 
 ### Resposta
 
@@ -45,6 +51,10 @@ POST /v1/pix/create
     "platform_fee": 80,
     "expires_at": "2026-04-21T13:00:00.000",
     "customer": {...},
+    "external_id": "cobranca-67890",
+    "metadata": {
+      "ref_pedido": "PED-2026-001"
+    },
     "created_at": "2026-04-21T12:00:00.000",
     "updated_at": "2026-04-21T12:00:00.000"
   },

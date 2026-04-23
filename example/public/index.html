@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MockPay Playground</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --near-black:  #0e0f0c;
+      --mockpay-green:  #9fe870;
+      --dark-green:  #163300;
+      --light-mint:  #e2f6d5;
+      --gray:        #868685;
+      --warm-dark:   #454745;
+      --bg:          #f7f8f5;
+      --white:       #ffffff;
+      --pos-green:   #054d28;
+      --danger-red:  #d03238;
+      --warn:        #7a5500;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { font-feature-settings: "calt" 1; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--near-black);
+      min-height: 100vh;
+      font-weight: 600;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── NAV ──────────────────────────────────── */
+    .nav {
+      background: var(--white);
+      height: 60px;
+      display: flex;
+      align-items: center;
+      padding: 0 36px;
+      gap: 32px;
+    }
+    .nav-brand {
+      font-size: 17px; font-weight: 900;
+      letter-spacing: -0.04em;
+      display: flex; align-items: center; gap: 8px;
+      flex-shrink: 0;
+    }
+    .nav-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: var(--mockpay-green);
+    }
+    .config {
+      display: flex; gap: 12px; flex: 1;
+    }
+    .config > div {
+      display: flex; align-items: center; gap: 8px;
+    }
+    .config label {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: .08em; text-transform: uppercase;
+      color: var(--gray); white-space: nowrap;
+    }
+    .config input {
+      padding: 6px 10px;
+      border-radius: 8px;
+      border: none;
+      background: var(--bg);
+      font-family: 'Inter', sans-serif;
+      font-size: 12px; font-weight: 600;
+      color: var(--near-black);
+      outline: none;
+      min-width: 180px;
+    }
+    .config input:focus { background: var(--light-mint); }
+    .nav-link {
+      font-size: 13px; font-weight: 700;
+      color: var(--near-black);
+      text-decoration: none;
+      padding: 7px 16px;
+      border-radius: 9999px;
+      background: var(--mockpay-green);
+      color: var(--dark-green);
+      transition: transform .18s cubic-bezier(.34,1.56,.64,1);
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .nav-link:hover  { transform: scale(1.05); }
+    .nav-link:active { transform: scale(0.95); }
+
+    /* ── LAYOUT ───────────────────────────────── */
+    .page { max-width: 1140px; margin: 0 auto; padding: 40px 36px 80px; }
+    .layout { display: grid; grid-template-columns: 160px 1fr; gap: 48px; }
+
+    /* ── SIDEBAR ──────────────────────────────── */
+    .sidebar {
+      display: flex; flex-direction: column; gap: 2px;
+      position: sticky; top: 24px; align-self: start;
+    }
+    .sidebar a {
+      display: block;
+      padding: 7px 12px;
+      border-radius: 9px;
+      font-size: 14px; font-weight: 600;
+      color: var(--gray);
+      cursor: pointer;
+      text-decoration: none;
+      transition: color .12s, background .12s;
+      letter-spacing: -0.01em;
+    }
+    .sidebar a:hover { color: var(--near-black); background: rgba(14,15,12,.05); }
+    .sidebar a.active {
+      color: var(--near-black);
+      background: var(--light-mint);
+    }
+
+    /* ── PANELS ───────────────────────────────── */
+    .panel { display: none; animation: fade-up .3s ease both; }
+    .panel.active { display: block; }
+
+    /* ── SECTION HEADER ───────────────────────── */
+    .section-title {
+      font-size: 28px; font-weight: 900;
+      letter-spacing: -0.035em; line-height: .9;
+      margin-bottom: 6px;
+    }
+    .section-sub {
+      font-size: 14px; font-weight: 400;
+      color: var(--gray); margin-bottom: 36px;
+    }
+
+    /* ── FORM GRID ────────────────────────────── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px 24px;
+      margin-bottom: 28px;
+    }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gray);
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      padding: 11px 14px;
+      border-radius: 12px;
+      border: none;
+      background: var(--white);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px; font-weight: 600;
+      color: var(--near-black);
+      outline: none;
+      transition: background .15s;
+      width: 100%;
+    }
+    .form-group input:focus,
+    .form-group select:focus { background: var(--light-mint); }
+    .form-group input::placeholder { color: var(--gray); font-weight: 500; }
+    .form-group select { appearance: none; cursor: pointer;
+      background-image: url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1.5L6 6.5L11 1.5' stroke='%23868685' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 14px center;
+      padding-right: 34px;
+    }
+    .form-group select[multiple] {
+      background-image: none;
+      padding-right: 14px;
+      height: auto;
+    }
+
+    /* ── PRODUCTS LIST ────────────────────────── */
+    .products-list { display: flex; flex-direction: column; gap: 10px; }
+    .product-row {
+      display: grid;
+      grid-template-columns: 1fr 100px 100px 32px;
+      gap: 8px; align-items: center;
+    }
+    .product-row input {
+      padding: 10px 12px; border-radius: 10px; border: none;
+      background: var(--white);
+      font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600;
+      color: var(--near-black); outline: none; transition: background .15s;
+    }
+    .product-row input:focus { background: var(--light-mint); }
+    .product-row input::placeholder { color: var(--gray); font-weight: 500; }
+    .btn-remove {
+      width: 32px; height: 32px; border-radius: 50%; border: none;
+      background: rgba(208,50,56,.08); color: var(--danger-red);
+      font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: transform .15s cubic-bezier(.34,1.56,.64,1), background .12s;
+      flex-shrink: 0;
+    }
+    .btn-remove:hover { transform: scale(1.1); background: rgba(208,50,56,.15); }
+
+    /* ── ACTIONS ──────────────────────────────── */
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 9999px;
+      font-size: 14px; font-weight: 700;
+      font-family: 'Inter', sans-serif;
+      letter-spacing: -0.01em; line-height: 1;
+      cursor: pointer; border: none;
+      transition: transform .18s cubic-bezier(.34,1.56,.64,1);
+    }
+    .btn:hover  { transform: scale(1.05); }
+    .btn:active { transform: scale(0.95); }
+    .btn-primary   { background: var(--mockpay-green); color: var(--dark-green); }
+    .btn-secondary { background: rgba(14,15,12,.07); color: var(--near-black); }
+    .btn-sm { padding: 7px 14px; font-size: 12px; }
+
+    /* ── RESPONSE AREA ────────────────────────── */
+    .response-wrap { margin-top: 32px; }
+    .response-label {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase;
+      color: var(--gray); margin-bottom: 10px;
+    }
+    #response {
+      background: var(--near-black);
+      color: #a8f0a0;
+      border-radius: 16px;
+      padding: 20px 22px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px; line-height: 1.7;
+      white-space: pre-wrap; word-break: break-all;
+      min-height: 80px;
+      display: none;
+    }
+    #response.visible { display: block; animation: fade-up .2s ease both; }
+    .response-ok  { color: var(--mockpay-green); }
+    .response-err { color: #f87474; }
+
+    /* ── STATS GRID ───────────────────────────── */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px; margin-top: 24px;
+    }
+    .stat-block { background: var(--white); border-radius: 16px; padding: 20px 22px; }
+    .stat-block .lbl {
+      font-size: 10px; font-weight: 700;
+      letter-spacing: .1em; text-transform: uppercase; color: var(--gray);
+      margin-bottom: 8px;
+    }
+    .stat-block .val {
+      font-size: 36px; font-weight: 900;
+      letter-spacing: -0.04em; line-height: .9;
+    }
+    .val-green  { color: var(--pos-green); }
+    .val-yellow { color: #7a5500; }
+    .val-red    { color: var(--danger-red); }
+
+    /* ── DIVIDER ──────────────────────────────── */
+    .section-divider {
+      height: 1px; background: rgba(14,15,12,.07);
+      margin: 28px 0;
+    }
+
+    @keyframes fade-up {
+      from { opacity: 0; transform: translateY(8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    /* ── CHECKBOXES ───────────────────────────── */
+    .checkbox-group {
+      display: flex; gap: 8px;
+    }
+    .checkbox-label {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 10px 14px; border-radius: 12px;
+      background: var(--white);
+      font-size: 14px; font-weight: 600;
+      cursor: pointer;
+      user-select: none;
+      transition: background .15s;
+    }
+    .checkbox-label:has(input:checked) {
+      background: var(--light-mint);
+      color: var(--pos-green);
+    }
+    .checkbox-label input[type="checkbox"] { display: none; }
+    .checkbox-box {
+      width: 16px; height: 16px;
+      border-radius: 5px;
+      background: rgba(14,15,12,.10);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      transition: background .15s;
+    }
+    .checkbox-label:has(input:checked) .checkbox-box {
+      background: var(--pos-green);
+    }
+    .checkbox-label:has(input:checked) .checkbox-box::after {
+      content: '';
+      width: 9px; height: 6px;
+      border-left: 2px solid #fff;
+      border-bottom: 2px solid #fff;
+      transform: rotate(-45deg) translateY(-1px);
+      display: block;
+    }
+
+  </style>
+</head>
+<body>
+
+  <nav class="nav">
+    <div class="nav-brand"><div class="nav-dot"></div>MockPay</div>
+    <div class="config">
+      <div>
+        <label>URL</label>
+        <input id="cfg-url" value="{{MOCKPAY_URL}}">
+      </div>
+      <div>
+        <label>API Key</label>
+        <input id="cfg-key" value="{{MOCKPAY_KEY}}">
+      </div>
+    </div>
+    <a href="{{MOCKPAY_URL}}/" target="_blank" class="nav-link">Dashboard →</a>
+  </nav>
+
+  <div class="page">
+    <div class="layout">
+
+      <div class="sidebar">
+        <a id="nav-health"   class="active" onclick="switchPanel('health')">Health</a>
+        <a id="nav-customer" onclick="switchPanel('customer')">Customers</a>
+        <a id="nav-coupon"   onclick="switchPanel('coupon')">Coupons</a>
+        <a id="nav-billing"  onclick="switchPanel('billing')">Billings</a>
+        <a id="nav-pix"      onclick="switchPanel('pix')">PIX</a>
+        <a id="nav-stats"    onclick="switchPanel('stats')">Stats</a>
+      </div>
+
+      <div class="panels">
+
+        <!-- ── HEALTH ── -->
+        <div id="panel-health" class="panel active">
+          <div class="section-title">Health</div>
+          <div class="section-sub">Check if MockPay is running and reachable.</div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="checkHealth()">Check health</button>
+          </div>
+        </div>
+
+        <!-- ── CUSTOMERS ── -->
+        <div id="panel-customer" class="panel">
+          <div class="section-title">Customers</div>
+          <div class="section-sub">Register customers — email is deduplicated automatically.</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Name</label>
+              <input id="c-name" placeholder="João Silva">
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input id="c-email" placeholder="joao@email.com">
+            </div>
+            <div class="form-group">
+              <label>Cellphone</label>
+              <input id="c-phone" placeholder="11999999999">
+            </div>
+            <div class="form-group">
+              <label>Tax ID (CPF)</label>
+              <input id="c-tax" placeholder="12345678900">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary"   onclick="createCustomer()">Create</button>
+            <button class="btn btn-secondary" onclick="listCustomers()">List all</button>
+          </div>
+        </div>
+
+        <!-- ── COUPONS ── -->
+        <div id="panel-coupon" class="panel">
+          <div class="section-title">Coupons</div>
+          <div class="section-sub">Percentage or fixed-amount discounts.</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Code</label>
+              <input id="cp-code" placeholder="PROMO20">
+            </div>
+            <div class="form-group">
+              <label>Discount kind</label>
+              <select id="cp-kind">
+                <option value="PERCENTAGE">Percentage</option>
+                <option value="FIXED">Fixed (cents)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Discount value</label>
+              <input id="cp-discount" type="number" placeholder="20">
+            </div>
+            <div class="form-group">
+              <label>Max redeems (−1 = unlimited)</label>
+              <input id="cp-max" type="number" placeholder="10">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary"   onclick="createCoupon()">Create</button>
+            <button class="btn btn-secondary" onclick="listCoupons()">List all</button>
+          </div>
+        </div>
+
+        <!-- ── BILLINGS ── -->
+        <div id="panel-billing" class="panel">
+          <div class="section-title">Billings</div>
+          <div class="section-sub">Create a charge with PIX and/or credit card.</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Frequency</label>
+              <select id="b-freq">
+                <option value="ONE_TIME">One time</option>
+                <option value="MULTIPLE_PAYMENTS">Recurring</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Methods</label>
+              <div class="checkbox-group">
+                <label class="checkbox-label">
+                  <input type="checkbox" class="method-checkbox" value="PIX" checked>
+                  <span class="checkbox-box"></span>
+                  PIX
+                </label>
+                <label class="checkbox-label">
+                  <input type="checkbox" class="method-checkbox" value="CARD" checked>
+                  <span class="checkbox-box"></span>
+                  Card
+                </label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Installments</label>
+              <input id="b-inst" type="number" value="1" min="1" max="12">
+            </div>
+            <div class="form-group">
+              <label>Interest rate %</label>
+              <input id="b-rate" type="number" value="0" step="0.5">
+            </div>
+            <div class="form-group">
+              <label>Coupon code</label>
+              <input id="b-coupon" placeholder="(optional)">
+            </div>
+            <div class="form-group">
+              <label>External ID</label>
+              <input id="b-external-id" placeholder="order_123">
+            </div>
+            <div class="form-group">
+              <label>Customer email</label>
+              <input id="b-cust-email" placeholder="(optional)">
+            </div>
+            <div class="form-group">
+              <label>Customer name</label>
+              <input id="b-cust-name" placeholder="(optional)">
+            </div>
+            <div class="form-group">
+              <label>Return URL</label>
+              <input id="b-return" value="http://localhost:{{PORT}}/return">
+            </div>
+            <div class="form-group">
+              <label>Completion URL</label>
+              <input id="b-done" value="http://localhost:{{PORT}}/done">
+            </div>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <div class="form-group full" style="margin-bottom:28px">
+            <label style="font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--gray);display:block;margin-bottom:12px;">Products</label>
+            <div class="products-list" id="products-list"></div>
+            <div style="margin-top:12px;">
+              <button class="btn btn-sm btn-secondary" onclick="addProduct()">+ Add product</button>
+            </div>
+          </div>
+
+          <div class="actions">
+            <button class="btn btn-primary" onclick="createBilling()">Create billing</button>
+          </div>
+        </div>
+
+        <!-- ── PIX ── -->
+        <div id="panel-pix" class="panel">
+          <div class="section-title">PIX</div>
+          <div class="section-sub">Instant charge with QR code and automatic expiration.</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Amount (cents)</label>
+              <input id="px-amount" type="number" value="5000" min="100">
+            </div>
+            <div class="form-group">
+              <label>Expires in (seconds)</label>
+              <input id="px-expires" type="number" value="3600">
+            </div>
+            <div class="form-group full">
+              <label>Description</label>
+              <input id="px-desc" placeholder="(optional)">
+            </div>
+            <div class="form-group">
+              <label>External ID</label>
+              <input id="px-external-id" placeholder="order_123">
+            </div>
+            <div class="form-group">
+              <label>Customer email</label>
+              <input id="px-cust-email" placeholder="(optional)">
+            </div>
+            <div class="form-group">
+              <label>Customer name</label>
+              <input id="px-cust-name" placeholder="(optional)">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="createPix()">Create PIX</button>
+          </div>
+        </div>
+
+        <!-- ── STATS ── -->
+        <div id="panel-stats" class="panel">
+          <div class="section-title">Stats</div>
+          <div class="section-sub">Aggregate statistics from MockPay.</div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="loadStats()">Load stats</button>
+          </div>
+          <div class="stats-grid" id="stats-grid" style="display:none"></div>
+        </div>
+
+        <!-- ── RESPONSE ── -->
+        <div class="response-wrap">
+          <div class="response-label" id="response-label" style="display:none">Response</div>
+          <pre id="response"></pre>
+        </div>
+
+      </div><!-- /panels -->
+    </div>
+  </div>
+
+  <script src="/js/app.js"></script>
+  <script>
+    function switchPanel(name) {
+      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('.sidebar a').forEach(a => a.classList.remove('active'));
+      document.getElementById('panel-' + name).classList.add('active');
+      document.getElementById('nav-' + name).classList.add('active');
+      const el = document.getElementById('response');
+      const lbl = document.getElementById('response-label');
+      el.className = '';
+      lbl.style.display = 'none';
+    }
+
+    function showResponse(data, ok = true) {
+      const el = document.getElementById('response');
+      const lbl = document.getElementById('response-label');
+      el.className = 'visible ' + (ok ? 'response-ok' : 'response-err');
+      el.textContent = typeof data === 'string' ? data : JSON.stringify(data, null, 2);
+      lbl.style.display = 'block';
+    }
+
+    let productCount = 0;
+    function addProduct() {
+      const list = document.getElementById('products-list');
+      const id = productCount++;
+      const row = document.createElement('div');
+      row.className = 'product-row';
+      row.id = 'prod-' + id;
+      row.innerHTML = `
+        <input placeholder="Product name" id="pn-${id}">
+        <input type="number" placeholder="Qty" id="pq-${id}" value="1">
+        <input type="number" placeholder="Price (¢)" id="pp-${id}">
+        <button class="btn-remove" onclick="document.getElementById('prod-${id}').remove()">×</button>
+      `;
+      list.appendChild(row);
+    }
+  </script>
+</body>
+</html>

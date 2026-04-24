@@ -48,6 +48,7 @@ func main() {
 	api.Get("/billing/get", billingH.Get)
 	api.Get("/billing/list", billingH.List)
 	api.Get("/billing/:id/installments", billingH.GetInstallments)
+	api.Post("/billing/:id/cancel", billingH.Cancel)
 
 	api.Post("/pix/create", pixH.Create)
 	api.Get("/pix/check", pixH.Check)

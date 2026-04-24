@@ -280,6 +280,140 @@ func TestPixServiceCreateLowAmount(t *testing.T) {
 	}
 }
 
+func TestBillingServiceCancelOneTime(t *testing.T) {
+	_, bs, _, _, _ := newTestEnv()
+
+	billing, _ := bs.Create(domain.CreateBillingRequest{
+		Products: []domain.Product{
+			{ExternalID: "p1", Name: "Test", Quantity: 1, Price: 5000},
+		},
+	})
+
+	cancelled, err := bs.Cancel(billing.ID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cancelled.Status != domain.StatusCancelled {
+		t.Errorf("expected CANCELLED, got %s", cancelled.Status)
+	}
+}
+
+func TestBillingServiceCancelRecurring(t *testing.T) {
+	_, bs, _, _, _ := newTestEnv()
+
+	billing, _ := bs.Create(domain.CreateBillingRequest{
+		Frequency: domain.FrequencyMultipleBilling,
+		Products: []domain.Product{
+			{ExternalID: "p1", Name: "Test", Quantity: 1, Price: 9900},
+		},
+	})
+
+	if billing.NextBilling == nil {
+		t.Fatal("expected next_billing to be set")
+	}
+
+	cancelled, err := bs.Cancel(billing.ID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cancelled.Status != domain.StatusCancelled {
+		t.Errorf("expected CANCELLED, got %s", cancelled.Status)
+	}
+	if cancelled.NextBilling != nil {
+		t.Error("expected next_billing to be nil after cancel")
+	}
+}
+
+func TestBillingServiceCancelNotFound(t *testing.T) {
+	_, bs, _, _, _ := newTestEnv()
+
+	_, err := bs.Cancel("nonexistent")
+	if err == nil {
+		t.Error("expected error for non-existent billing")
+	}
+}
+
+func TestBillingServiceCancelAlreadyApproved(t *testing.T) {
+	_, bs, _, _, _ := newTestEnv()
+
+	billing, _ := bs.Create(domain.CreateBillingRequest{
+		Products: []domain.Product{
+			{ExternalID: "p1", Name: "Test", Quantity: 1, Price: 5000},
+		},
+	})
+	bs.Approve(billing.ID)
+
+	_, err := bs.Cancel(billing.ID)
+	if err == nil {
+		t.Error("expected error for cancelling approved one-time billing")
+	}
+}
+
+func TestBillingServiceCancelRecurringAfterApproval(t *testing.T) {
+	_, bs, _, _, _ := newTestEnv()
+
+	billing, _ := bs.Create(domain.CreateBillingRequest{
+		Frequency: domain.FrequencyMultipleBilling,
+		Products: []domain.Product{
+			{ExternalID: "p1", Name: "Test", Quantity: 1, Price: 9900},
+		},
+	})
+	bs.Approve(billing.ID)
+
+	cancelled, err := bs.Cancel(billing.ID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cancelled.Status != domain.StatusCancelled {
+		t.Errorf("expected CANCELLED, got %s", cancelled.Status)
+	}
+	if cancelled.NextBilling != nil {
+		t.Error("expected next_billing to be nil after cancel")
+	}
+}
+
+func TestBillingServiceCancelAlreadyCancelled(t *testing.T) {
+	_, bs, _, _, _ := newTestEnv()
+
+	billing, _ := bs.Create(domain.CreateBillingRequest{
+		Products: []domain.Product{
+			{ExternalID: "p1", Name: "Test", Quantity: 1, Price: 5000},
+		},
+	})
+	bs.Cancel(billing.ID)
+
+	_, err := bs.Cancel(billing.ID)
+	if err == nil {
+		t.Error("expected error for cancelling already cancelled billing")
+	}
+}
+
+func TestBillingServiceCancelWithInstallments(t *testing.T) {
+	_, bs, _, _, _ := newTestEnv()
+
+	billing, _ := bs.Create(domain.CreateBillingRequest{
+		Products: []domain.Product{
+			{ExternalID: "p1", Name: "Test", Quantity: 1, Price: 10000},
+		},
+		Installments: 3,
+	})
+
+	cancelled, err := bs.Cancel(billing.ID)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+	if cancelled.Status != domain.StatusCancelled {
+		t.Errorf("expected CANCELLED, got %s", cancelled.Status)
+	}
+
+	insts, _ := bs.GetInstallments(billing.ID)
+	for _, inst := range insts {
+		if inst.Status != string(domain.StatusCancelled) {
+			t.Errorf("expected CANCELLED installment, got %s", inst.Status)
+		}
+	}
+}
+
 func TestPixServiceApprove(t *testing.T) {
 	_, _, _, _, ps := newTestEnv()
 

@@ -60,3 +60,17 @@ func (h *BillingHandler) GetInstallments(c fiber.Ctx) error {
 
 	return c.JSON(domain.Ok(installments))
 }
+
+func (h *BillingHandler) Cancel(c fiber.Ctx) error {
+	id := c.Params("id")
+	if id == "" {
+		return c.Status(400).JSON(domain.Err("id parameter is required", "BAD_REQUEST"))
+	}
+
+	billing, err := h.service.Cancel(id)
+	if err != nil {
+		return c.Status(400).JSON(domain.Err(err.Error(), "BAD_REQUEST"))
+	}
+
+	return c.JSON(domain.Ok(billing))
+}

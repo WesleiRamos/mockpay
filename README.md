@@ -42,6 +42,8 @@ Dashboard at `http://localhost:8080/`
 | `POST` | `/v1/billing/create` | Create a billing |
 | `GET` | `/v1/billing/get?id=` | Get a billing |
 | `GET` | `/v1/billing/list` | List all billings |
+| `POST` | `/v1/billing/:id/cancel` | Cancel a pending billing |
+| `GET` | `/v1/billing/:id/installments` | Get billing installments |
 | `POST` | `/v1/pix/create` | Create a PIX charge |
 | `GET` | `/v1/pix/check?id=` | Check PIX status |
 | `POST` | `/v1/customer/create` | Create a customer |

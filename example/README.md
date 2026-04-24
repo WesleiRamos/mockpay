@@ -29,6 +29,7 @@ MOCKPAY_WEBHOOK_URL=http://localhost:3000/webhook
 - **Customers** - Create and list customers
 - **Coupons** - Create and list discount coupons
 - **Billings** - Create charges (PIX and/or card)
+- **Cancel** - Cancel pending billings and stop recurring cycles
 - **PIX** - Instant charges with QR Code
 - **Stats** - Aggregated statistics
 

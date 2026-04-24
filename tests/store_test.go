@@ -199,6 +199,29 @@ func TestConcurrentAccess(t *testing.T) {
 	}
 }
 
+func TestClearNextBilling(t *testing.T) {
+	s := newTestStore()
+	nb := "2026-06-01T12:00:00.000"
+	s.CreateBilling(&domain.Billing{
+		ID:          "bill_recur_1",
+		Status:      domain.StatusPending,
+		Frequency:   domain.FrequencyMultipleBilling,
+		NextBilling: &nb,
+	})
+
+	got, _ := s.GetBilling("bill_recur_1")
+	if got.NextBilling == nil {
+		t.Fatal("expected next_billing to be set")
+	}
+
+	s.ClearNextBilling("bill_recur_1")
+
+	got, _ = s.GetBilling("bill_recur_1")
+	if got.NextBilling != nil {
+		t.Error("expected next_billing to be nil after clear")
+	}
+}
+
 func TestFindByID(t *testing.T) {
 	s := newTestStore()
 	s.CreateBilling(&domain.Billing{ID: "bill_1"})

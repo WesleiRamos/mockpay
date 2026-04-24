@@ -330,6 +330,7 @@
         <a id="nav-customer" onclick="switchPanel('customer')">Customers</a>
         <a id="nav-coupon"   onclick="switchPanel('coupon')">Coupons</a>
         <a id="nav-billing"  onclick="switchPanel('billing')">Billings</a>
+        <a id="nav-cancel"   onclick="switchPanel('cancel')">Cancel</a>
         <a id="nav-pix"      onclick="switchPanel('pix')">PIX</a>
         <a id="nav-stats"    onclick="switchPanel('stats')">Stats</a>
       </div>
@@ -477,6 +478,21 @@
 
           <div class="actions">
             <button class="btn btn-primary" onclick="createBilling()">Create billing</button>
+          </div>
+        </div>
+
+        <!-- ── CANCEL ── -->
+        <div id="panel-cancel" class="panel">
+          <div class="section-title">Cancel</div>
+          <div class="section-sub">Cancel a pending billing by ID. Stops recurring cycles and marks installments as cancelled.</div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Billing ID</label>
+              <input id="cancel-id" placeholder="bill_abc123...">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="cancelBilling()">Cancel billing</button>
           </div>
         </div>
 

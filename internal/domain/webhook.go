@@ -5,8 +5,9 @@ type WebhookEventType string
 const (
 	EventBillingApproved WebhookEventType = "billing.approved"
 	EventBillingDenied   WebhookEventType = "billing.denied"
-	EventBillingCreated  WebhookEventType = "billing.created"
-	EventPixApproved     WebhookEventType = "pix.approved"
+	EventBillingCreated   WebhookEventType = "billing.created"
+	EventBillingCancelled WebhookEventType = "billing.cancelled"
+	EventPixApproved      WebhookEventType = "pix.approved"
 	EventPixExpired      WebhookEventType = "pix.expired"
 )
 

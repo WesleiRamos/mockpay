@@ -182,6 +182,42 @@ func (bs *BillingService) Deny(id string) (*domain.Billing, error) {
 	return updated, nil
 }
 
+func (bs *BillingService) Cancel(id string) (*domain.Billing, error) {
+	b, ok := bs.store.GetBilling(id)
+	if !ok {
+		return nil, fmt.Errorf("billing not found")
+	}
+
+	if b.Status == domain.StatusCancelled {
+		return nil, fmt.Errorf("billing is already cancelled")
+	}
+
+	if b.Frequency == domain.FrequencyMultipleBilling {
+		if b.Status != domain.StatusPending && b.Status != domain.StatusApproved {
+			return nil, fmt.Errorf("only pending or approved recurring billings can be cancelled")
+		}
+		bs.store.UpdateBillingStatus(id, domain.StatusCancelled)
+		bs.store.ClearNextBilling(id)
+	} else {
+		if b.Status != domain.StatusPending {
+			return nil, fmt.Errorf("only pending billings can be cancelled")
+		}
+		bs.store.UpdateBillingStatus(id, domain.StatusCancelled)
+	}
+
+	if len(b.InstallmentList) > 0 {
+		for i := range b.InstallmentList {
+			b.InstallmentList[i].Status = string(domain.StatusCancelled)
+		}
+		bs.store.UpdateBillingInstallments(id, b.InstallmentList)
+	}
+
+	updated, _ := bs.store.GetBilling(id)
+	bs.webhook.Dispatch(domain.EventBillingCancelled, updated)
+
+	return updated, nil
+}
+
 func (bs *BillingService) GetInstallments(id string) ([]domain.Installment, error) {
 	b, ok := bs.store.GetBilling(id)
 	if !ok {

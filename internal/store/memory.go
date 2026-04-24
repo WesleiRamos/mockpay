@@ -216,6 +216,17 @@ func (s *MemoryStore) ListBillingsByStatus(status domain.BillingStatus) []*domai
 	return result
 }
 
+func (s *MemoryStore) ClearNextBilling(id string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	now := domain.NowTimestamp()
+	_, err := s.db.Exec(`UPDATE billings SET next_billing = NULL, updated_at = ? WHERE id = ?`, now, id)
+	if err != nil {
+		log.Printf("ClearNextBilling error: %v", err)
+	}
+}
+
 func (s *MemoryStore) UpdateBillingInstallments(id string, installments []domain.Installment) {
 	s.mu.Lock()
 	defer s.mu.Unlock()

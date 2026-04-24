@@ -86,8 +86,34 @@ The webhook payload contains the full new billing object.
 
 ## Stopping Recurrence
 
-Currently, recurrence continues until:
-- The original billing is approved or denied (status changes from PENDING)
-- The server is stopped
+### Cancel Endpoint
 
-There is no explicit cancel endpoint for recurring billings.
+Use the cancel endpoint to stop a recurring (or any pending) billing:
+
+```bash
+curl -X POST http://localhost:8080/v1/billing/abc123.../cancel \
+  -H "Authorization: Bearer mock_key"
+```
+
+### Response
+
+```json
+{
+  "data": {
+    "id": "abc123...",
+    "status": "CANCELLED",
+    "frequency": "MULTIPLE_PAYMENTS",
+    "next_billing": null,
+    ...
+  }
+}
+```
+
+### Cancel Behavior
+
+- Only **PENDING** billings can be cancelled
+- Status changes to `CANCELLED`
+- `next_billing` is cleared (stops the recurring cycle)
+- All installments are marked as `CANCELLED`
+- A `billing.cancelled` webhook event is dispatched
+- Works for both `ONE_TIME` and `MULTIPLE_PAYMENTS` billings

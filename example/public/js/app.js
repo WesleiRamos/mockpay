@@ -123,6 +123,7 @@ function statusStyle(status) {
     APPROVED: base + "background:var(--light-mint);color:var(--pos-green);",
     DENIED:   base + "background:rgba(208,50,56,.09);color:var(--danger-red);",
     EXPIRED:  base + "background:rgba(14,15,12,.07);color:var(--warm-dark);",
+    CANCELLED: base + "background:rgba(14,15,12,.10);color:var(--gray);",
     ACTIVE:   base + "background:var(--light-mint);color:var(--pos-green);",
   };
   return map[status] || map.PENDING;
@@ -311,6 +312,16 @@ async function createPix() {
       qr.appendChild(a);
     }
   }
+}
+
+async function cancelBilling() {
+  const id = document.getElementById("cancel-id").value.trim();
+  if (!id) {
+    showResponse({ error: { message: "Billing ID is required" } });
+    return;
+  }
+  const r = await api("POST", `/v1/billing/${id}/cancel`);
+  showResponse(r);
 }
 
 async function loadStats() {

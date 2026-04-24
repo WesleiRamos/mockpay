@@ -86,8 +86,34 @@ O payload do webhook contém o objeto completo da nova cobrança.
 
 ## Interrompendo a Recorrência
 
-Atualmente, a recorrência continua até que:
-- A cobrança original seja aprovada ou negada (o status muda de PENDING)
-- O servidor seja interrompido
+### Endpoint de Cancelamento
 
-Não existe um endpoint explícito de cancelamento para cobranças recorrentes.
+Use o endpoint de cancelamento para parar uma cobrança recorrente (ou qualquer cobrança pendente):
+
+```bash
+curl -X POST http://localhost:8080/v1/billing/abc123.../cancel \
+  -H "Authorization: Bearer mock_key"
+```
+
+### Resposta
+
+```json
+{
+  "data": {
+    "id": "abc123...",
+    "status": "CANCELLED",
+    "frequency": "MULTIPLE_PAYMENTS",
+    "next_billing": null,
+    ...
+  }
+}
+```
+
+### Comportamento do Cancelamento
+
+- Apenas cobranças **PENDING** podem ser canceladas
+- O status muda para `CANCELLED`
+- O `next_billing` é limpo (interrompe o ciclo recorrente)
+- Todas as parcelas são marcadas como `CANCELLED`
+- Um evento de webhook `billing.cancelled` é disparado
+- Funciona para cobranças `ONE_TIME` e `MULTIPLE_PAYMENTS`

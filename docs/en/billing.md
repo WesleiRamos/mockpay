@@ -117,11 +117,41 @@ PENDING → APPROVED
 PENDING → DENIED
 PENDING → EXPIRED (recurring only)
 PENDING → CANCELLED
+APPROVED → CANCELLED (recurring only)
 ```
 
 - **APPROVED** - Payment was approved via checkout or dashboard.
 - **DENIED** - Payment was denied via checkout or dashboard.
-- **Status transitions are final** - a billing cannot change status after being approved or denied.
+- **CANCELLED** - Billing was cancelled via API. For recurring billings, stops future charges.
+- **Status transitions are final** - a billing cannot change status after being approved or denied (except recurring billings transitioning to CANCELLED).
+
+## Cancel a Billing
+
+```
+POST /v1/billing/:id/cancel
+```
+
+### Behavior
+
+- **ONE_TIME** billings: only `PENDING` billings can be cancelled
+- **MULTIPLE_PAYMENTS** (recurring) billings: both `PENDING` and `APPROVED` billings can be cancelled
+- Cancelling a recurring billing clears `next_billing`, stopping the recurring cycle
+- All installments are marked as `CANCELLED`
+- A `billing.cancelled` webhook event is dispatched
+
+### Response
+
+```json
+{
+  "data": {
+    "id": "abc123...",
+    "status": "CANCELLED",
+    "frequency": "MULTIPLE_PAYMENTS",
+    "next_billing": null,
+    ...
+  }
+}
+```
 
 ## Approval Flow
 

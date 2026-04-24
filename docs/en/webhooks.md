@@ -17,6 +17,7 @@ Both variables are optional. If `MOCKPAY_WEBHOOK_URL` is empty, webhooks are dis
 |-------|---------|
 | `billing.approved` | Billing payment approved |
 | `billing.denied` | Billing payment denied |
+| `billing.cancelled` | Billing cancelled via API |
 | `billing.created` | Recurring billing auto-created |
 | `pix.approved` | PIX payment approved |
 | `pix.expired` | PIX charge expired |

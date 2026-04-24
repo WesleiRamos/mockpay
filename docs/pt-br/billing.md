@@ -117,11 +117,41 @@ PENDING → APPROVED
 PENDING → DENIED
 PENDING → EXPIRED (apenas recorrentes)
 PENDING → CANCELLED
+APPROVED → CANCELLED (apenas recorrentes)
 ```
 
 - **APPROVED** - O pagamento foi aprovado via checkout ou dashboard.
 - **DENIED** - O pagamento foi recusado via checkout ou dashboard.
-- **As transições de status são definitivas** - uma cobrança não pode ter seu status alterado após ser aprovada ou recusada.
+- **CANCELLED** - A cobrança foi cancelada via API. Para cobranças recorrentes, interrompe cobranças futuras.
+- **As transições de status são definitivas** - uma cobrança não pode ter seu status alterado após ser aprovada ou recusada (exceto cobranças recorrentes que podem transitar para CANCELLED).
+
+## Cancelar uma cobrança
+
+```
+POST /v1/billing/:id/cancel
+```
+
+### Comportamento
+
+- Cobranças **ONE_TIME**: apenas cobranças `PENDING` podem ser canceladas
+- Cobranças **MULTIPLE_PAYMENTS** (recorrentes): cobranças `PENDING` e `APPROVED` podem ser canceladas
+- Ao cancelar uma cobrança recorrente, o `next_billing` é limpo, interrompendo o ciclo de recorrência
+- Todas as parcelas são marcadas como `CANCELLED`
+- Um evento de webhook `billing.cancelled` é disparado
+
+### Resposta
+
+```json
+{
+  "data": {
+    "id": "abc123...",
+    "status": "CANCELLED",
+    "frequency": "MULTIPLE_PAYMENTS",
+    "next_billing": null,
+    ...
+  }
+}
+```
 
 ## Fluxo de aprovação
 

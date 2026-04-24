@@ -29,7 +29,7 @@ func (h *BillingHandler) Create(c fiber.Ctx) error {
 }
 
 func (h *BillingHandler) Get(c fiber.Ctx) error {
-	id := c.Query("id")
+	id := c.Params("id")
 	if id == "" {
 		return c.Status(400).JSON(domain.Err("id parameter is required", "BAD_REQUEST"))
 	}

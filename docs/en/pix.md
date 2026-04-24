@@ -65,7 +65,7 @@ POST /v1/pix/create
 ## Check PIX Status
 
 ```
-GET /v1/pix/check?id=<id>
+GET /v1/pix/:id
 ```
 
 Returns the current PIX charge with its status.

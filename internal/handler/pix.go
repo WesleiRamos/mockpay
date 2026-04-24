@@ -29,7 +29,7 @@ func (h *PixHandler) Create(c fiber.Ctx) error {
 }
 
 func (h *PixHandler) Check(c fiber.Ctx) error {
-	id := c.Query("id")
+	id := c.Params("id")
 	if id == "" {
 		return c.Status(400).JSON(domain.Err("id parameter is required", "BAD_REQUEST"))
 	}

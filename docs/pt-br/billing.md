@@ -99,7 +99,7 @@ O `amount` total da cobrança é a soma de todos os produtos (`price * quantity`
 ## Obter uma cobrança
 
 ```
-GET /v1/billing/get?id=<id>
+GET /v1/billing/:id
 ```
 
 ## Listar cobranças

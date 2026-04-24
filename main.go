@@ -45,13 +45,13 @@ func main() {
 
 	api := app.Group("/v1", middleware.Auth(cfg))
 	api.Post("/billing/create", billingH.Create)
-	api.Get("/billing/get", billingH.Get)
+	api.Get("/billing/:id", billingH.Get)
 	api.Get("/billing/list", billingH.List)
 	api.Get("/billing/:id/installments", billingH.GetInstallments)
 	api.Post("/billing/:id/cancel", billingH.Cancel)
 
 	api.Post("/pix/create", pixH.Create)
-	api.Get("/pix/check", pixH.Check)
+	api.Get("/pix/:id", pixH.Check)
 
 	api.Post("/customer/create", customerH.Create)
 	api.Get("/customer/list", customerH.List)

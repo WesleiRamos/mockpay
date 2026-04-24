@@ -99,7 +99,7 @@ The total billing `amount` is the sum of all products (`price * quantity`).
 ## Get a Billing
 
 ```
-GET /v1/billing/get?id=<id>
+GET /v1/billing/:id
 ```
 
 ## List Billings

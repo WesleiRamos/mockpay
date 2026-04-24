@@ -65,7 +65,7 @@ POST /v1/pix/create
 ## Verificar Status do PIX
 
 ```
-GET /v1/pix/check?id=<id>
+GET /v1/pix/:id
 ```
 
 Retorna a cobrança PIX atual com seu status.

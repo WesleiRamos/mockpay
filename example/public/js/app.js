@@ -125,6 +125,9 @@ function statusStyle(status) {
     EXPIRED:  base + "background:rgba(14,15,12,.07);color:var(--warm-dark);",
     CANCELLED: base + "background:rgba(14,15,12,.10);color:var(--gray);",
     ACTIVE:   base + "background:var(--light-mint);color:var(--pos-green);",
+    PROCESSING: base + "background:rgba(255,209,26,.18);color:#7a5500;",
+    LIQUIDATED: base + "background:var(--light-mint);color:var(--pos-green);",
+    FAILED:     base + "background:rgba(208,50,56,.09);color:var(--danger-red);",
   };
   return map[status] || map.PENDING;
 }
@@ -312,6 +315,34 @@ async function createPix() {
       qr.appendChild(a);
     }
   }
+}
+
+async function createPayout() {
+  const body = {
+    amount:          parseInt(document.getElementById("po-amount").value),
+    pix_key_type:    document.getElementById("po-key-type").value,
+    pix_key:         document.getElementById("po-key").value,
+    external_id:     document.getElementById("po-external-id").value,
+    idempotency_key: document.getElementById("po-idem-key").value,
+    metadata:        { source: "wallet" },
+  };
+
+  const r = await api("POST", "/v1/pix/payouts", body);
+  showResponse(r);
+
+  if (r.data) {
+    showResults("payout", [r.data], "payout");
+  }
+}
+
+async function checkPayout() {
+  const id = document.getElementById("po-check-id").value.trim();
+  if (!id) {
+    showResponse({ error: { message: "Payout ID is required" } });
+    return;
+  }
+  const r = await api("GET", `/v1/pix/payouts/${id}/check`);
+  showResponse(r);
 }
 
 async function cancelBilling() {

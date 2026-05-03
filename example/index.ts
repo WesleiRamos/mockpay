@@ -30,7 +30,7 @@ serve({
     const url = new URL(req.url);
 
     // Receive webhook from MockPay
-    if (url.pathname === "/webhook" && req.method === "POST") {
+    if ((url.pathname === "/webhook" || url.pathname === "/callbacks/pix/withdrawals") && req.method === "POST") {
       const body = await req.json();
       console.log("[webhook]", JSON.stringify(body));
       broadcast("webhook", body);

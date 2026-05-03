@@ -285,7 +285,7 @@ func (h *CheckoutHandler) Health(c fiber.Ctx) error {
 	})
 }
 
-func StartBackgroundJobs(bs *service.BillingService, ps *service.PixService) {
+func StartBackgroundJobs(bs *service.BillingService, ps *service.PixService, pps *service.PixPayoutService) {
 	go func() {
 		ticker := time.NewTicker(30 * time.Second)
 		defer ticker.Stop()
@@ -296,6 +296,9 @@ func StartBackgroundJobs(bs *service.BillingService, ps *service.PixService) {
 
 			log.Println("[background] checking recurring billings...")
 			bs.CheckRecurring()
+
+			log.Println("[background] checking pix payouts to liquidate...")
+			pps.CheckLiquidate()
 		}
 	}()
 }

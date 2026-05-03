@@ -97,6 +97,19 @@ func (s *MemoryStore) migrate() {
 			created_at TEXT NOT NULL,
 			updated_at TEXT NOT NULL
 		)`,
+		`CREATE TABLE IF NOT EXISTS pix_payouts (
+			id TEXT PRIMARY KEY,
+			amount INTEGER NOT NULL,
+			status TEXT NOT NULL,
+			external_id TEXT DEFAULT '',
+			end_to_end_id TEXT DEFAULT '',
+			pix_key_type TEXT DEFAULT '',
+			pix_key TEXT DEFAULT '',
+			idempotency_key TEXT DEFAULT '',
+			metadata TEXT DEFAULT '{}',
+			created_at TEXT NOT NULL,
+			updated_at TEXT NOT NULL
+		)`,
 		`CREATE TABLE IF NOT EXISTS webhook_deliveries (
 			id TEXT PRIMARY KEY,
 			event_id TEXT NOT NULL,
@@ -616,6 +629,136 @@ func (s *MemoryStore) scanPixChargeRow(rows *sql.Rows) (*domain.PixCharge, bool)
 	}
 	if pixMetadata.Valid {
 		json.Unmarshal([]byte(pixMetadata.String), &p.Metadata)
+	}
+	return &p, true
+}
+
+// --- PIX Payouts ---
+
+func (s *MemoryStore) CreatePixPayout(p *domain.PixPayout) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	payoutMeta, _ := json.Marshal(p.Metadata)
+
+	_, err := s.db.Exec(`INSERT INTO pix_payouts (id, amount, status, external_id, end_to_end_id, pix_key_type, pix_key, idempotency_key, metadata, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		p.ID, p.Amount, string(p.Status), p.ExternalID, p.EndToEndID,
+		p.PixKeyType, p.PixKey, p.IdempotencyKey, string(payoutMeta), p.CreatedAt, p.UpdatedAt)
+	if err != nil {
+		log.Printf("CreatePixPayout error: %v", err)
+	}
+}
+
+func (s *MemoryStore) GetPixPayout(id string) (*domain.PixPayout, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	row := s.db.QueryRow(`SELECT id, amount, status, external_id, end_to_end_id, pix_key_type, pix_key, idempotency_key, metadata, created_at, updated_at
+		FROM pix_payouts WHERE id = ?`, id)
+	return s.scanPixPayout(row)
+}
+
+func (s *MemoryStore) GetPixPayoutByIdempotencyKey(key string) (*domain.PixPayout, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	row := s.db.QueryRow(`SELECT id, amount, status, external_id, end_to_end_id, pix_key_type, pix_key, idempotency_key, metadata, created_at, updated_at
+		FROM pix_payouts WHERE idempotency_key = ?`, key)
+	return s.scanPixPayout(row)
+}
+
+func (s *MemoryStore) ListPixPayouts() []*domain.PixPayout {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	rows, err := s.db.Query(`SELECT id, amount, status, external_id, end_to_end_id, pix_key_type, pix_key, idempotency_key, metadata, created_at, updated_at
+		FROM pix_payouts ORDER BY created_at DESC`)
+	if err != nil {
+		return nil
+	}
+	defer rows.Close()
+
+	var result []*domain.PixPayout
+	for rows.Next() {
+		p, ok := s.scanPixPayoutRow(rows)
+		if ok {
+			result = append(result, p)
+		}
+	}
+	return result
+}
+
+func (s *MemoryStore) UpdatePixPayoutStatus(id string, status domain.PixPayoutStatus, endToEndID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	now := domain.NowTimestamp()
+	_, err := s.db.Exec(`UPDATE pix_payouts SET status = ?, end_to_end_id = ?, updated_at = ? WHERE id = ?`,
+		string(status), endToEndID, now, id)
+	if err != nil {
+		log.Printf("UpdatePixPayoutStatus error: %v", err)
+	}
+}
+
+func (s *MemoryStore) scanPixPayout(row *sql.Row) (*domain.PixPayout, bool) {
+	var p domain.PixPayout
+	var status string
+	var metadataJSON sql.NullString
+	var pixKeyType sql.NullString
+	var pixKey sql.NullString
+	var idempotencyKey sql.NullString
+
+	err := row.Scan(&p.ID, &p.Amount, &status, &p.ExternalID, &p.EndToEndID,
+		&pixKeyType, &pixKey, &idempotencyKey, &metadataJSON, &p.CreatedAt, &p.UpdatedAt)
+	if err != nil {
+		return nil, false
+	}
+
+	p.Status = domain.PixPayoutStatus(status)
+
+	if pixKeyType.Valid {
+		p.PixKeyType = pixKeyType.String
+	}
+	if pixKey.Valid {
+		p.PixKey = pixKey.String
+	}
+	if idempotencyKey.Valid {
+		p.IdempotencyKey = idempotencyKey.String
+	}
+	if metadataJSON.Valid {
+		json.Unmarshal([]byte(metadataJSON.String), &p.Metadata)
+	}
+	return &p, true
+}
+
+func (s *MemoryStore) scanPixPayoutRow(rows *sql.Rows) (*domain.PixPayout, bool) {
+	var p domain.PixPayout
+	var status string
+	var metadataJSON sql.NullString
+	var pixKeyType sql.NullString
+	var pixKey sql.NullString
+	var idempotencyKey sql.NullString
+
+	err := rows.Scan(&p.ID, &p.Amount, &status, &p.ExternalID, &p.EndToEndID,
+		&pixKeyType, &pixKey, &idempotencyKey, &metadataJSON, &p.CreatedAt, &p.UpdatedAt)
+	if err != nil {
+		return nil, false
+	}
+
+	p.Status = domain.PixPayoutStatus(status)
+
+	if pixKeyType.Valid {
+		p.PixKeyType = pixKeyType.String
+	}
+	if pixKey.Valid {
+		p.PixKey = pixKey.String
+	}
+	if idempotencyKey.Valid {
+		p.IdempotencyKey = idempotencyKey.String
+	}
+	if metadataJSON.Valid {
+		json.Unmarshal([]byte(metadataJSON.String), &p.Metadata)
 	}
 	return &p, true
 }

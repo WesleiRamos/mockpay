@@ -21,6 +21,7 @@ Ambas as variáveis são opcionais. Se `MOCKPAY_WEBHOOK_URL` estiver vazia, os w
 | `billing.created` | Cobrança recorrente criada automaticamente |
 | `pix.approved` | Pagamento PIX aprovado |
 | `pix.expired` | Cobrança PIX expirada |
+| `pix.payout.liquidated` | PIX payout (saque) liquidado |
 
 ## Payload
 

@@ -24,14 +24,16 @@ func main() {
 
 	qrBaseURL := cfg.PublicURL
 	pixSvc := service.NewPixService(memStore, webhookSvc, qrBaseURL)
+	pixPayoutSvc := service.NewPixPayoutService(memStore, webhookSvc)
 
 	billingH := handler.NewBillingHandler(billingSvc)
 	customerH := handler.NewCustomerHandler(customerSvc)
 	couponH := handler.NewCouponHandler(couponSvc)
 	pixH := handler.NewPixHandler(pixSvc)
+	pixPayoutH := handler.NewPixPayoutHandler(pixPayoutSvc)
 	checkoutH := handler.NewCheckoutHandler(memStore, billingSvc, pixSvc, qrBaseURL)
 
-	handler.StartBackgroundJobs(billingSvc, pixSvc)
+	handler.StartBackgroundJobs(billingSvc, pixSvc, pixPayoutSvc)
 
 	app := fiber.New(fiber.Config{
 		AppName: "MockPay",
@@ -52,6 +54,9 @@ func main() {
 
 	api.Post("/pix/create", pixH.Create)
 	api.Get("/pix/:id", pixH.Check)
+
+	api.Post("/pix/payouts", pixPayoutH.Create)
+	api.Get("/pix/payouts/:id/check", pixPayoutH.Check)
 
 	api.Post("/customer/create", customerH.Create)
 	api.Get("/customer/list", customerH.List)

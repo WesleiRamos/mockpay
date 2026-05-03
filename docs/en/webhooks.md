@@ -21,6 +21,7 @@ Both variables are optional. If `MOCKPAY_WEBHOOK_URL` is empty, webhooks are dis
 | `billing.created` | Recurring billing auto-created |
 | `pix.approved` | PIX payment approved |
 | `pix.expired` | PIX charge expired |
+| `pix.payout.liquidated` | PIX payout (withdrawal) liquidated |
 
 ## Payload
 

@@ -332,6 +332,7 @@
         <a id="nav-billing"  onclick="switchPanel('billing')">Billings</a>
         <a id="nav-cancel"   onclick="switchPanel('cancel')">Cancel</a>
         <a id="nav-pix"      onclick="switchPanel('pix')">PIX</a>
+        <a id="nav-payout"   onclick="switchPanel('payout')">PIX Payout</a>
         <a id="nav-stats"    onclick="switchPanel('stats')">Stats</a>
       </div>
 
@@ -528,6 +529,55 @@
           </div>
           <div class="actions">
             <button class="btn btn-primary" onclick="createPix()">Create PIX</button>
+          </div>
+        </div>
+
+        <!-- ── PIX PAYOUT ── -->
+        <div id="panel-payout" class="panel">
+          <div class="section-title">PIX Payout</div>
+          <div class="section-sub">Request a PIX withdrawal (PIX Send). Auto-liquidates after 30s.</div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Amount (cents)</label>
+              <input id="po-amount" type="number" value="5000" min="1">
+            </div>
+            <div class="form-group">
+              <label>PIX key type</label>
+              <select id="po-key-type">
+                <option value="cpf">CPF</option>
+                <option value="phone">Phone</option>
+                <option value="email">Email</option>
+                <option value="random">Random</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>PIX key</label>
+              <input id="po-key" placeholder="12345678901">
+            </div>
+            <div class="form-group">
+              <label>External ID</label>
+              <input id="po-external-id" placeholder="withdrawal_123">
+            </div>
+            <div class="form-group full">
+              <label>Idempotency key</label>
+              <input id="po-idem-key" placeholder="pix-withdrawal:payout:uuid-here">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="createPayout()">Create payout</button>
+          </div>
+
+          <div class="section-divider"></div>
+
+          <div class="section-title" style="font-size:20px;margin-bottom:12px;">Check payout</div>
+          <div class="form-grid">
+            <div class="form-group full">
+              <label>Payout ID</label>
+              <input id="po-check-id" placeholder="Paste payout ID from response above">
+            </div>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="checkPayout()">Check status</button>
           </div>
         </div>
 

@@ -3,12 +3,13 @@ package domain
 type WebhookEventType string
 
 const (
-	EventBillingApproved WebhookEventType = "billing.approved"
-	EventBillingDenied   WebhookEventType = "billing.denied"
-	EventBillingCreated   WebhookEventType = "billing.created"
-	EventBillingCancelled WebhookEventType = "billing.cancelled"
-	EventPixApproved      WebhookEventType = "pix.approved"
-	EventPixExpired      WebhookEventType = "pix.expired"
+	EventBillingApproved     WebhookEventType = "billing.approved"
+	EventBillingDenied       WebhookEventType = "billing.denied"
+	EventBillingCreated      WebhookEventType = "billing.created"
+	EventBillingCancelled    WebhookEventType = "billing.cancelled"
+	EventPixApproved         WebhookEventType = "pix.approved"
+	EventPixExpired          WebhookEventType = "pix.expired"
+	EventPixPayoutLiquidated WebhookEventType = "pix.payout.liquidated"
 )
 
 type WebhookEvent struct {
